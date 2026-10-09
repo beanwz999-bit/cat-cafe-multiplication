@@ -1,7 +1,7 @@
 /* Offline support: network-first, falling back to cache. */
-const CACHE = 'purrfect-v3';
+const CACHE = 'purrfect-v4';
 const ASSETS = [
-  './', './index.html', './index.css', './manifest.json', './assets/icon.png',
+  './', './index.html', './index.css', './manifest.json', './assets/icon.png', './assets/apple-touch-icon.png',
   './js/audio.js', './js/cats.js', './js/problems.js', './js/shop.js', './js/ui.js', './js/practice.js', './js/game.js',
 ];
 
