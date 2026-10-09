@@ -97,7 +97,23 @@ const Problems = (() => {
   }
 
   function masteredCount(state, op) {
-    return Object.entries(state.facts).filter(([k, f]) => f.mastered && (!op || k[0] === op)).length;
+    let count = 0;
+    for (const [k, f] of Object.entries((state && state.facts) || {})) {
+      if (!f.mastered && !(f.streak >= 3)) continue;
+      const type = k[0];
+      if (op && type !== op) continue;
+      if (type === 'x') {
+        const parts = k.slice(1).split('-');
+        if (parts[0] !== parts[1]) {
+          count += 2;
+        } else {
+          count += 1;
+        }
+      } else {
+        count += 1;
+      }
+    }
+    return count;
   }
 
   function factText(p) {

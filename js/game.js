@@ -778,7 +778,7 @@ function renderGarden() {
   const hasDiv = S.settings.division || Object.keys(S.facts).some(k => k[0] === 'd');
   if (!hasDiv) gardenOp = 'x';
   const op = gardenOp;
-  const total = op === 'x' ? 78 : 144;
+  const total = 144;
   const done = Problems.masteredCount(S, op);
   let grid = `<div class="g-head corner">${op === 'x' ? '×' : '÷'}</div>`;
   for (let c = 1; c <= 12; c++) grid += `<div class="g-head">${c}</div>`;
