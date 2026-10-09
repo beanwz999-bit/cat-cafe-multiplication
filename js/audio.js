@@ -155,6 +155,13 @@ const Sound = (() => {
     o.start(t0); o.stop(t0 + 0.5);
   }
 
+  function pianoKey() {
+    if (!ctx) return;
+    const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880, 987.77, 1046.5];
+    const freq = notes[Math.floor(Math.random() * notes.length)];
+    tone(freq, 0, 0.4, { type: 'triangle', vol: 0.18 });
+  }
+
   const effects = {
     tap: () => tone(700, 0, 0.06, { type: 'triangle', vol: 0.07 }),
     key: () => tone(520 + Math.random() * 60, 0, 0.05, { type: 'triangle', vol: 0.06 }),
