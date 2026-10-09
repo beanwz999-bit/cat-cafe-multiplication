@@ -79,13 +79,17 @@ function neediest(cat) {
 function renderCostumeSVG(costumeKey) {
   if (!costumeKey) return '';
   switch (costumeKey) {
+    case 'dragon':
     case 'dino':
-      return `<g class="costume-dino">
-        <path d="M52 82 C52 42 70 30 100 30 C130 30 148 42 148 82 Z" fill="#70E000" opacity=".92"/>
-        <path d="M58 82 C58 48 74 38 100 38 C126 38 142 48 142 82 Z" fill="none" stroke="#38B000" stroke-width="3"/>
-        <polygon points="100,8 90,30 110,30" fill="#FFD166" stroke="#E5A93B" stroke-width="1.5"/>
-        <polygon points="76,16 70,36 88,34" fill="#FFD166" stroke="#E5A93B" stroke-width="1.5"/>
-        <polygon points="124,16 112,34 130,36" fill="#FFD166" stroke="#E5A93B" stroke-width="1.5"/>
+      return `<g class="costume-dragon">
+        <path d="M40 90 Q15 60 5 95 Q30 95 48 105 Z" fill="#90BE6D" stroke="#40916C" stroke-width="2"/>
+        <path d="M160 90 Q185 60 195 95 Q170 95 152 105 Z" fill="#90BE6D" stroke="#40916C" stroke-width="2"/>
+        <path d="M52 82 C52 42 70 30 100 30 C130 30 148 42 148 82 Z" fill="#40916C" opacity=".92"/>
+        <path d="M58 82 C58 48 74 38 100 38 C126 38 142 48 142 82 Z" fill="none" stroke="#2D6A4F" stroke-width="3"/>
+        <polygon points="100,5 90,28 110,28" fill="#FFB703" stroke="#FB8500" stroke-width="2"/>
+        <polygon points="76,14 70,34 88,32" fill="#FFB703" stroke="#FB8500" stroke-width="1.5"/>
+        <polygon points="124,14 112,32 130,34" fill="#FFB703" stroke="#FB8500" stroke-width="1.5"/>
+        <circle cx="100" cy="48" r="6" fill="#E63946"/>
       </g>`;
     case 'dog':
       return `<g class="costume-dog">

@@ -112,11 +112,47 @@ const Sound = (() => {
     src.stop(t0 + dur); lfo.stop(t0 + dur);
   }
 
-  function pianoKey() {
+  function dinoRoar() {
     if (!ctx) return;
-    const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
-    const n = notes[Math.floor(Math.random() * notes.length)];
-    tone(n, 0, 0.4, { type: 'triangle', vol: 0.2 });
+    const t0 = ctx.currentTime;
+    const p = 0.85 + Math.random() * 0.3;
+    const o = ctx.createOscillator();
+    const f = ctx.createBiquadFilter();
+    const g = ctx.createGain();
+
+    o.type = 'sawtooth';
+    o.frequency.setValueAtTime(140 * p, t0);
+    o.frequency.exponentialRampToValueAtTime(340 * p, t0 + 0.15);
+    o.frequency.exponentialRampToValueAtTime(120 * p, t0 + 0.6);
+    o.frequency.exponentialRampToValueAtTime(60 * p, t0 + 0.85);
+
+    f.type = 'lowpass';
+    f.frequency.setValueAtTime(450, t0);
+    f.frequency.exponentialRampToValueAtTime(1900, t0 + 0.18);
+    f.frequency.exponentialRampToValueAtTime(400, t0 + 0.8);
+
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(0.4, t0 + 0.08);
+    g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.5);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
+
+    o.connect(f); f.connect(g); g.connect(master);
+    o.start(t0);
+    o.stop(t0 + 0.95);
+  }
+
+  function dinoStomp() {
+    if (!ctx) return;
+    const t0 = ctx.currentTime;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine';
+    o.frequency.setValueAtTime(130, t0);
+    o.frequency.exponentialRampToValueAtTime(35, t0 + 0.4);
+    g.gain.setValueAtTime(0.45, t0);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
+    o.connect(g); g.connect(master);
+    o.start(t0); o.stop(t0 + 0.5);
   }
 
   const effects = {
@@ -160,13 +196,20 @@ const Sound = (() => {
     pianoKey,
     meow,
     purr,
+    dinoRoar,
+    dinoStomp,
   };
 
   return {
     play(name) {
       if (!enabled) return;
       if (!ensure()) return;
-      try { effects[name] && effects[name](); } catch (e) { /* ignore audio errors */ }
+      let target = name;
+      if (typeof S !== 'undefined' && S && S.theme === 'dino') {
+        if (target === 'meow') target = 'dinoRoar';
+        if (target === 'purr') target = 'dinoStomp';
+      }
+      try { effects[target] && effects[target](); } catch (e) { /* ignore audio errors */ }
     },
     setEnabled(v) { enabled = !!v; },
     get enabled() { return enabled; },

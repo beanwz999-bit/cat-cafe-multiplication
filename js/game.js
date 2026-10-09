@@ -13,16 +13,16 @@ function getAllTables() {
 
 const ROOMS = {
   cat: [
-    { id: 'x', name: '🏠 Multiplication Café (×)', icon: '✖️', op: 'x' },
-    { id: '+', name: '🪴 Addition Patio (+)', icon: '➕', op: '+' },
-    { id: '-', name: '☀️ Subtraction Lounge (-)', icon: '➖', op: '-' },
-    { id: 'd', name: '🎈 Division Playroom (÷)', icon: '➗', op: 'd' },
+    { id: 'x', name: '🏠 Multiplication Café (×)', icon: '✖️', op: 'x', bg: 'mult' },
+    { id: '+', name: '🪴 Addition Patio (+)', icon: '➕', op: '+', bg: 'add' },
+    { id: '-', name: '☀️ Subtraction Lounge (-)', icon: '➖', op: '-', bg: 'sub' },
+    { id: 'd', name: '🎈 Division Playroom (÷)', icon: '➗', op: 'd', bg: 'div' },
   ],
   dino: [
-    { id: 'x', name: '🦕 T-Rex Enclosure (×)', icon: '✖️', op: 'x' },
-    { id: '+', name: '🌋 Volcano Ridge (+)', icon: '➕', op: '+' },
-    { id: '-', name: '🌴 Fern Jungle (-)', icon: '➖', op: '-' },
-    { id: 'd', name: '🦴 Fossil Safari Dig (÷)', icon: '➗', op: 'd' },
+    { id: 'x', name: '🦕 T-Rex Enclosure (×)', icon: '✖️', op: 'x', bg: 'mult' },
+    { id: '+', name: '🌋 Volcano Ridge (+)', icon: '➕', op: '+', bg: 'add' },
+    { id: '-', name: '🌴 Fern Jungle (-)', icon: '➖', op: '-', bg: 'sub' },
+    { id: 'd', name: '🦴 Fossil Safari Dig (÷)', icon: '➗', op: 'd', bg: 'div' },
   ],
 };
 
@@ -530,7 +530,7 @@ function renderCafe() {
 
   v.innerHTML = `
     <div class="cafe ${isDino ? 'dino-zoo-layout' : ''}">
-      <div class="cafe-scene ${isDino ? 'dino-scene' : ''} room-${currentRoom}" id="cafe-scene">
+      <div class="cafe-scene ${isDino ? 'dino-scene' : ''} room-${roomObj.bg}" id="cafe-scene">
         <div class="room-selector">
           ${rooms.map(r => `<button class="room-tab ${r.id === currentRoom ? 'on' : ''}" data-room="${r.id}">${r.icon} ${r.name}</button>`).join('')}
         </div>

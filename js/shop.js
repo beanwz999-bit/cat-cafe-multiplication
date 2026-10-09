@@ -28,7 +28,7 @@ const DECOR = {
 };
 
 const COSTUMES = {
-  c_dino:    { id: 'dino',    name: 'Dino Suit',      emoji: '🦖', price: 35, desc: 'A green dinosaur hoodie with back spikes!' },
+  c_dragon:  { id: 'dragon',  name: 'Dragon Suit',    emoji: '🐉', price: 35, desc: 'A legendary dragon suit with wings, horns & fiery scales!' },
   c_dog:     { id: 'dog',     name: 'Dog Hoodie',     emoji: '🐶', price: 35, desc: 'A fluffy puppy hoodie with floppy brown ears!' },
   c_cow:     { id: 'cow',     name: 'Cow Onesie',     emoji: '🐮', price: 35, desc: 'A spotted cow onesie with tiny horns!' },
   c_chicken: { id: 'chicken', name: 'Chicken Outfit', emoji: '🐔', price: 35, desc: 'A yellow feather suit with a red comb!' },
