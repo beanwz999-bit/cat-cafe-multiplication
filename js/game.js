@@ -51,6 +51,7 @@ function defaultState() {
 }
 
 function normalizeState(s) {
+  if (!s || typeof s !== 'object') return;
   if (!s.currentRoom || !['x', '+', '-', 'd'].includes(s.currentRoom)) {
     s.currentRoom = 'x';
   }
@@ -62,8 +63,16 @@ function normalizeState(s) {
   }
   if (!s.cats) s.cats = [];
   s.cats.forEach(c => {
-    if (!c.room) c.room = 'x';
+    if (!c || typeof c !== 'object') return;
+    if (c.hunger === undefined) c.hunger = 80;
+    if (c.fun === undefined) c.fun = 80;
+    if (c.cozy === undefined) c.cozy = 80;
+    if (!c.room || !['x', '+', '-', 'd'].includes(c.room)) c.room = 'x';
   });
+  if (!s.inventory) s.inventory = {};
+  if (!s.facts) s.facts = {};
+  if (!s.settings) s.settings = { sound: true, division: false, addition: false, subtraction: false, upTo15: false, tables: ALL_TABLES.slice(), mode: 'x' };
+  if (!s.stats) s.stats = { answered: 0, correct: 0, bestStreak: 0, speedBest: { x: 0, d: 0, mix: 0 } };
 }
 
 function loadState() {
@@ -162,14 +171,24 @@ function showView(name) {
 }
 
 function updateHeader() {
-  const isDino = S.theme === 'dino';
-  const title = isDino ? `${S.playerName}'s Dino Zoo` : `${S.playerName}'s Cat Café`;
-  $('#cafe-title').textContent = title;
-  document.title = `${title} – Purr-fect Products`;
-  if (S.cats[0]) {
-    $('#brand-cat').innerHTML = isDino ? dinoSVG(S.cats[0].breed, 'happy') : catSVG(S.cats[0].breed, 'happy');
+  try {
+    const isDino = S.theme === 'dino';
+    const title = isDino ? `${S.playerName}'s Dino Zoo` : `${S.playerName}'s Cat Café`;
+    const cafeTitle = $('#cafe-title');
+    if (cafeTitle) cafeTitle.textContent = title;
+    document.title = `${title} – Purr-fect Products`;
+    const brandCat = $('#brand-cat');
+    if (brandCat && S.cats && S.cats[0]) {
+      const firstPet = S.cats[0];
+      const svg = (isDino && typeof dinoSVG === 'function')
+        ? dinoSVG(firstPet.breed, 'happy')
+        : (typeof catSVG === 'function' ? catSVG(firstPet.breed, 'happy') : '🐱');
+      brandCat.innerHTML = svg;
+    }
+    updateCoins(false);
+  } catch (e) {
+    console.error('Header update error:', e);
   }
-  updateCoins(false);
 }
 
 function enterMain(returning) {
@@ -1371,41 +1390,50 @@ function openSettings() {
 
 /* =========================== Boot =========================== */
 function boot() {
-  Sound.setEnabled(S.settings.sound);
+  try {
+    normalizeState(S);
+    Sound.setEnabled(S.settings ? S.settings.sound : true);
 
-  $$('.tab').forEach(t => t.addEventListener('click', () => {
-    if (t.dataset.view === currentView) return;
-    Sound.play('tap');
-    showView(t.dataset.view);
-  }));
-  $('#btn-settings').addEventListener('click', openSettings);
-  $('#coin-pill').addEventListener('click', () => { Sound.play('tap'); showView('shop'); });
-  $('#brand-cat').addEventListener('click', () => { Sound.play('meow'); UI.restartAnim($('#brand-cat'), 'wiggle'); });
+    $$('.tab').forEach(t => t.addEventListener('click', () => {
+      if (t.dataset.view === currentView) return;
+      Sound.play('tap');
+      showView(t.dataset.view);
+    }));
+    const btnSet = $('#btn-settings');
+    if (btnSet) btnSet.addEventListener('click', openSettings);
+    const coinPill = $('#coin-pill');
+    if (coinPill) coinPill.addEventListener('click', () => { Sound.play('tap'); showView('shop'); });
+    const brandCat = $('#brand-cat');
+    if (brandCat) brandCat.addEventListener('click', () => { Sound.play('meow'); UI.restartAnim(brandCat, 'wiggle'); });
 
-  document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT') return;
-    let k = null;
-    if (/^\d$/.test(e.key)) k = e.key;
-    else if (e.key === 'Backspace') k = 'back';
-    else if (e.key === 'Enter') k = 'ok';
-    if (!k) return;
-    if (Speed.active) { Speed.key(k); e.preventDefault(); }
-    else if (currentView === 'practice' && !UI.anyModalOpen() && Practice.built) { Practice.key(k); e.preventDefault(); }
-  });
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT') return;
+      let k = null;
+      if (/^\d$/.test(e.key)) k = e.key;
+      else if (e.key === 'Backspace') k = 'back';
+      else if (e.key === 'Enter') k = 'ok';
+      if (!k) return;
+      if (typeof Speed !== 'undefined' && Speed.active) { Speed.key(k); e.preventDefault(); }
+      else if (currentView === 'practice' && !UI.anyModalOpen() && typeof Practice !== 'undefined' && Practice.built) { Practice.key(k); e.preventDefault(); }
+    });
 
-  document.addEventListener('gesturestart', e => e.preventDefault());
-  setInterval(tickNeeds, 30000);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) save(); });
+    document.addEventListener('gesturestart', e => e.preventDefault());
+    setInterval(tickNeeds, 30000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) save(); });
 
-  if (!S.playerName || !S.cats.length) {
-    Onboarding.start();
-  } else {
-    applyOfflineDecay();
-    enterMain(true);
-  }
+    if (!S.playerName || !S.cats || !S.cats.length) {
+      Onboarding.start();
+    } else {
+      applyOfflineDecay();
+      enterMain(true);
+    }
 
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+    if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  } catch (err) {
+    console.error('Boot error caught:', err);
+    try { Onboarding.start(); } catch (e2) {}
   }
 }
 

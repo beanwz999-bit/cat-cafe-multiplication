@@ -1,8 +1,8 @@
 /* Offline support: network-first, falling back to cache. */
-const CACHE = 'purrfect-v4';
+const CACHE = 'purrfect-v5';
 const ASSETS = [
   './', './index.html', './index.css', './manifest.json', './assets/icon.png', './assets/apple-touch-icon.png',
-  './js/audio.js', './js/cats.js', './js/problems.js', './js/shop.js', './js/ui.js', './js/practice.js', './js/game.js',
+  './js/audio.js', './js/dinos.js', './js/cats.js', './js/problems.js', './js/shop.js', './js/ui.js', './js/practice.js', './js/game.js',
 ];
 
 self.addEventListener('install', e => {
