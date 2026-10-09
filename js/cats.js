@@ -50,14 +50,16 @@ const MOOD_TEXT = {
 
 const NAME_IDEAS = ['Mochi', 'Luna', 'Whiskers', 'Pumpkin', 'Biscuit', 'Oreo', 'Ginger', 'Noodle', 'Pepper', 'Cinnamon', 'Muffin', 'Ziggy', 'Bean', 'Sprinkles', 'Sparkles', 'Starlight', 'Celeste'];
 
-function adoptionList(state) {
+function adoptionList(state, roomOp = 'x') {
   const isDino = state && state.theme === 'dino';
   const order = isDino ? ADOPT_DINO_ORDER : ADOPT_ORDER;
-  const starter = state.cats[0] ? state.cats[0].breed : null;
+  const roomCats = (state && state.cats) ? state.cats.filter(c => (c.room || 'x') === roomOp) : [];
+  const starter = roomCats[0] ? roomCats[0].breed : null;
+  const roomAdopted = (state && state.adoptedByRoom && state.adoptedByRoom[roomOp]) || state.adopted || [];
   return order.filter(b => b !== starter).slice(0, ADOPT_TIERS.length).map((breed, i) => ({
     breed,
     ...ADOPT_TIERS[i],
-    adopted: state.adopted.includes(breed),
+    adopted: roomAdopted.includes(breed),
   }));
 }
 

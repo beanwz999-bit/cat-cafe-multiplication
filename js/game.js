@@ -13,16 +13,16 @@ function getAllTables() {
 
 const ROOMS = {
   cat: [
-    { id: 'main', name: '🏠 Main Café', icon: '🏠' },
-    { id: 'patio', name: '🪴 Garden Patio', icon: '🪴' },
-    { id: 'sunroom', name: '☀️ Sunroom Lounge', icon: '☀️' },
-    { id: 'playroom', name: '🎈 Playroom', icon: '🎈' },
+    { id: 'x', name: '🏠 Multiplication Café (×)', icon: '✖️', op: 'x' },
+    { id: '+', name: '🪴 Addition Patio (+)', icon: '➕', op: '+' },
+    { id: '-', name: '☀️ Subtraction Lounge (-)', icon: '➖', op: '-' },
+    { id: 'd', name: '🎈 Division Playroom (÷)', icon: '➗', op: 'd' },
   ],
   dino: [
-    { id: 'main', name: '🦕 T-Rex Enclosure', icon: '🦕' },
-    { id: 'patio', name: '🌋 Volcano Ridge', icon: '🌋' },
-    { id: 'sunroom', name: '🌴 Fern Jungle', icon: '🌴' },
-    { id: 'playroom', name: '🦴 Fossil Safari Dig', icon: '🦴' },
+    { id: 'x', name: '🦕 T-Rex Enclosure (×)', icon: '✖️', op: 'x' },
+    { id: '+', name: '🌋 Volcano Ridge (+)', icon: '➕', op: '+' },
+    { id: '-', name: '🌴 Fern Jungle (-)', icon: '➖', op: '-' },
+    { id: 'd', name: '🦴 Fossil Safari Dig (÷)', icon: '➗', op: 'd' },
   ],
 };
 
@@ -39,13 +39,31 @@ function defaultState() {
     inventory: {},
     ownedCostumes: [],
     equippedCostumes: {},
-    currentRoom: 'main',
+    currentRoom: 'x',
     decor: [],
+    decorByRoom: { x: [], '+': [], '-': [], d: [] },
     adopted: [],
+    adoptedByRoom: { x: [], '+': [], '-': [], d: [] },
     facts: {},
     stats: { answered: 0, correct: 0, bestStreak: 0, speedBest: { x: 0, d: 0, mix: 0 } },
     nextCatId: 1,
   };
+}
+
+function normalizeState(s) {
+  if (!s.currentRoom || !['x', '+', '-', 'd'].includes(s.currentRoom)) {
+    s.currentRoom = 'x';
+  }
+  if (!s.decorByRoom) {
+    s.decorByRoom = { x: s.decor || [], '+': [], '-': [], d: [] };
+  }
+  if (!s.adoptedByRoom) {
+    s.adoptedByRoom = { x: s.adopted || [], '+': [], '-': [], d: [] };
+  }
+  if (!s.cats) s.cats = [];
+  s.cats.forEach(c => {
+    if (!c.room) c.room = 'x';
+  });
 }
 
 function loadState() {
@@ -54,21 +72,23 @@ function loadState() {
     if (!raw) return null;
     const d = JSON.parse(raw);
     const base = defaultState();
-    return {
+    const loaded = {
       ...base, ...d,
       theme: d.theme || 'cat',
       ownedCostumes: d.ownedCostumes || [],
       equippedCostumes: d.equippedCostumes || {},
-      currentRoom: d.currentRoom || 'main',
       settings: { ...base.settings, ...d.settings },
       stats: { ...base.stats, ...d.stats, speedBest: { ...base.stats.speedBest, ...(d.stats && d.stats.speedBest) } },
     };
+    normalizeState(loaded);
+    return loaded;
   } catch (e) {
     return null;
   }
 }
 
 let S = loadState() || defaultState();
+normalizeState(S);
 let currentView = 'cafe';
 let shopTab = 'food';
 let gardenOp = 'x';
@@ -316,9 +336,10 @@ const Onboarding = (() => {
 })();
 
 /* =========================== Interactive Decor =========================== */
-function decorHTML() {
+function decorHTML(roomDecor) {
   const isDino = S.theme === 'dino';
-  const has = id => S.decor.includes(id);
+  const list = roomDecor || (S.decorByRoom && S.decorByRoom[S.currentRoom]) || S.decor || [];
+  const has = id => list.includes(id);
   let wall = '', floor = '', top = '';
   if (has('lights')) {
     const colors = isDino ? ['#90BE6D', '#FFD166', '#43AA8B', '#F9C74F', '#277DA1'] : ['#FF8FAB', '#FFD166', '#6FD6B4', '#8CC8FF', '#B9A2FF'];
@@ -394,8 +415,9 @@ function cafeTip() {
       ? `${NEED_INFO[need].emoji} <b>${esc(c.name)}</b> ${NEED_INFO[need].want}! Tap ${esc(c.name)} to help.`
       : `${NEED_INFO[need].emoji} <b>${esc(c.name)}</b> ${NEED_INFO[need].want}! Earn 🪙 <b>${isDino ? 'dino coins' : 'cat coins'}</b> in the Shop.`;
   }
-  const nextCat = adoptionList(S).find(a => !a.adopted);
-  if (nextCat && Problems.masteredCount(S) >= nextCat.flowers && S.coins >= nextCat.price) {
+  const currentOp = (S && S.currentRoom) || 'x';
+  const nextCat = adoptionList(S, currentOp).find(a => !a.adopted);
+  if (nextCat && Problems.masteredCount(S, currentOp) >= nextCat.flowers && S.coins >= nextCat.price) {
     return isDino ? `🥚 A new dinosaur is ready in <b>Adopt</b>!` : `🏠 A new kitty is waiting for you in <b>Adopt</b>!`;
   }
   const tips = isDino ? [
@@ -424,20 +446,27 @@ function updateThemeBody() {
 }
 
 function renderCafe() {
+  normalizeState(S);
   updateThemeBody();
   const v = $('#view-cafe');
-  const d = decorHTML();
-  initCatPositions();
 
   const isDino = S.theme === 'dino';
   const rooms = isDino ? ROOMS.dino : ROOMS.cat;
-  const currentRoom = S.currentRoom || 'main';
+  const currentRoom = S.currentRoom || 'x';
   const roomObj = rooms.find(r => r.id === currentRoom) || rooms[0];
+  const currentOp = roomObj.op;
+
+  const roomDecor = (S.decorByRoom && S.decorByRoom[currentRoom]) || [];
+  const d = decorHTML(roomDecor);
+  initCatPositions();
+
   const titleSign = isDino ? `🦕 ${esc(S.playerName)}'s Prehistoric Zoo — ${roomObj.name}` : `☕ ${esc(S.playerName)}'s Cat Café — ${roomObj.name}`;
   const coinLabel = isDino ? 'dino coins' : 'cat coins';
   const petLabel = isDino ? 'dinos' : 'cats';
 
-  const catsHTML = S.cats.map((c) => {
+  const roomCats = S.cats.filter(c => (c.room || 'x') === currentRoom);
+
+  const catsHTML = roomCats.length ? roomCats.map((c) => {
     const pos = catPos[c.id];
     const mood = catMood(c);
     const [need, val] = neediest(c);
@@ -451,10 +480,17 @@ function renderCafe() {
         <div class="cat-bob" style="transform: scaleX(${scaleX})">${petSVG(c, mood)}</div>
         <span class="cat-name">${esc(c.name)}</span>
       </button>`;
-  }).join('');
+  }).join('') : `
+    <div class="empty-room-msg">
+      <span>${isDino ? '🥚' : '🐾'}</span>
+      <b>No ${petLabel} in this room yet!</b>
+      <p>Grow flowers 🌸 in the <b>${roomObj.name}</b> garden to adopt ${petLabel} for this room!</p>
+      <button class="btn btn-mint btn-sm" id="btn-room-adopt">Adopt ${petLabel} for this room</button>
+    </div>
+  `;
 
-  const happy = S.cats.length ? Math.round(S.cats.reduce((s, c) => s + (c.hunger + c.fun + c.cozy) / 3, 0) / S.cats.length) : 0;
-  const flowers = Problems.masteredCount(S);
+  const happy = roomCats.length ? Math.round(roomCats.reduce((s, c) => s + (c.hunger + c.fun + c.cozy) / 3, 0) / roomCats.length) : 0;
+  const flowers = Problems.masteredCount(S, currentOp);
 
   const wallHTML = isDino ? `
     <div class="wall dino-wall">
@@ -516,7 +552,7 @@ function renderCafe() {
           <button class="btn btn-mint btn-block" id="cafe-wardrobe" style="margin-top:10px;">👗 Wardrobe & Costumes</button>
         </div>
         <div class="mini-stats">
-          <div><b>${S.cats.length}</b><span>${petLabel}</span></div>
+          <div><b>${roomCats.length}</b><span>${petLabel}</span></div>
           <div><b>${flowers}</b><span>flowers</span></div>
           <div><b>${S.stats.bestStreak}</b><span>best streak</span></div>
         </div>
@@ -526,11 +562,37 @@ function renderCafe() {
   $$('.room-tab', v).forEach(tab => {
     tab.addEventListener('click', () => {
       Sound.play('tap');
-      S.currentRoom = tab.dataset.room;
+      const rId = tab.dataset.room;
+      S.currentRoom = rId;
+
+      if (rId === '+') { S.settings.addition = true; S.settings.mode = '+'; }
+      else if (rId === '-') { S.settings.subtraction = true; S.settings.mode = '-'; }
+      else if (rId === 'd') { S.settings.division = true; S.settings.mode = 'd'; }
+      else { S.settings.mode = 'x'; }
+
       save();
       renderCafe();
+      const rName = rooms.find(r => r.id === rId).name;
+      UI.toast(`Switched to <b>${rName}</b>!`);
     });
   });
+
+  const btnAdopt = $('#btn-room-adopt', v);
+  if (btnAdopt) {
+    btnAdopt.addEventListener('click', () => {
+      Sound.play('tap');
+      showView('adopt');
+    });
+  }
+
+  $('#cafe-play').addEventListener('click', () => {
+    Sound.play('tap');
+    S.settings.mode = currentOp;
+    save();
+    showView('practice');
+  });
+
+  $('#cafe-wardrobe').addEventListener('click', () => { openWardrobe(); });
 
   $$('.decor-item', v).forEach(item => {
     item.addEventListener('click', e => {
@@ -544,9 +606,6 @@ function renderCafe() {
     UI.restartAnim(b, 'jump');
     openCare(Number(b.dataset.cat));
   }));
-
-  $('#cafe-play').addEventListener('click', () => { Sound.play('tap'); showView('practice'); });
-  $('#cafe-wardrobe').addEventListener('click', () => { openWardrobe(); });
 
   startCatRoamingLoop();
 }
@@ -870,8 +929,14 @@ function buy(id, btn) {
   UI.floatText(btn, `${it.emoji}`, 'big');
 
   if (isDecor) {
-    S.decor.push(id);
-    UI.toast(`${it.emoji} <b>${it.name}</b> added to your park!`, 'gold');
+    const currentRoom = S.currentRoom || 'x';
+    if (!S.decorByRoom) S.decorByRoom = { x: [], '+': [], '-': [], d: [] };
+    if (!S.decorByRoom[currentRoom]) S.decorByRoom[currentRoom] = [];
+    if (!S.decorByRoom[currentRoom].includes(id)) S.decorByRoom[currentRoom].push(id);
+    if (!S.decor.includes(id)) S.decor.push(id);
+    const rooms = (S.theme === 'dino' ? ROOMS.dino : ROOMS.cat);
+    const roomObj = rooms.find(r => r.id === currentRoom) || rooms[0];
+    UI.toast(`${it.emoji} <b>${it.name}</b> added to <b>${roomObj.name}</b>!`, 'gold');
     UI.confetti(60);
   } else if (isCostume) {
     if (!S.ownedCostumes) S.ownedCostumes = [];
@@ -889,32 +954,42 @@ function buy(id, btn) {
 
 /* =========================== Adopt =========================== */
 function renderAdopt() {
+  normalizeState(S);
   const v = $('#view-adopt');
   const isDino = S.theme === 'dino';
-  const list = adoptionList(S);
-  const flowers = Problems.masteredCount(S);
+  const currentRoom = S.currentRoom || 'x';
+  const rooms = isDino ? ROOMS.dino : ROOMS.cat;
+  const roomObj = rooms.find(r => r.id === currentRoom) || rooms[0];
+  const currentOp = roomObj.op;
+
+  const list = adoptionList(S, currentOp);
+  const flowers = Problems.masteredCount(S, currentOp);
   const remaining = list.filter(a => !a.adopted);
   const breeds = isDino ? DINO_BREEDS : BREEDS;
-  const title = isDino ? '🦕 Dino Adoption Center' : '🐾 Adoption Center';
-  const sub = isDino ? 'These mini dinos are looking for a home! Grow flowers 🌸 in your Fact Garden and save 🪙 <b>dino coins</b> to adopt them.'
-                    : 'These kitties are looking for a home! Grow flowers 🌸 in your Fact Garden and save 🪙 <b>cat coins</b> to adopt them.';
+  const title = isDino ? `🦕 ${roomObj.name} Adoption` : `🐾 ${roomObj.name} Adoption`;
+  const sub = `Adopt pets for <b>${roomObj.name}</b>! Grow flowers 🌸 in the <b>${roomObj.name}</b> garden and save 🪙 <b>${isDino ? 'dino coins' : 'cat coins'}</b>.`;
+
+  const roomCats = S.cats.filter(c => (c.room || 'x') === currentRoom);
 
   v.innerHTML = `
     <div class="page">
       <div class="page-head">
         <h2 class="page-title">${title}</h2>
         <p class="page-sub">${sub}</p>
+        <div class="room-selector inline-selector" style="margin-top:10px;">
+          ${rooms.map(r => `<button class="room-tab ${r.id === currentRoom ? 'on' : ''}" data-room="${r.id}">${r.icon} ${r.name}</button>`).join('')}
+        </div>
       </div>
-      ${remaining.length ? '' : `<div class="all-done">🎉 Every pet has a home! You're an amazing caretaker!</div>`}
+      ${remaining.length ? '' : `<div class="all-done">🎉 Every pet for ${roomObj.name} has a home! You're an amazing caretaker!</div>`}
       <div class="adopt-grid">
         ${list.map((a, i) => {
           const br = breeds[a.breed] || BREEDS.orange;
-          const owned = S.cats.find(c => c.breed === a.breed);
+          const owned = roomCats.find(c => c.breed === a.breed);
           if (a.adopted && owned) {
             return `<div class="adopt-card adopted">
               <div class="adopt-cat">${petSVG(owned, 'ecstatic')}</div>
               <div class="adopt-name">${esc(owned.name)}</div>
-              <div class="adopt-blurb">Lives with you 💖</div>
+              <div class="adopt-blurb">Lives in ${roomObj.name} 💖</div>
             </div>`;
           }
           const isNext = remaining[0] && remaining[0].breed === a.breed;
@@ -926,7 +1001,7 @@ function renderAdopt() {
               <div class="adopt-cat">${petSVG(previewPet, 'happy')}${locked ? '<div class="lock">🔒</div>' : ''}</div>
               <div class="adopt-name">${br.label}</div>
               <div class="adopt-blurb">${br.blurb}</div>
-              <div class="req ${fOk ? 'ok' : ''}"><span>🌸 ${Math.min(flowers, a.flowers)}/${a.flowers} flowers</span>
+              <div class="req ${fOk ? 'ok' : ''}"><span>🌸 ${Math.min(flowers, a.flowers)}/${a.flowers} ${roomObj.name} flowers</span>
                 <div class="m-track"><div class="m-fill" style="width:${Math.min(100, flowers / a.flowers * 100)}%;background:linear-gradient(90deg,#FFB3C8,#FF8FAB)"></div></div></div>
               <div class="req ${cOk ? 'ok' : ''}"><span>🪙 ${Math.min(S.coins, a.price)}/${a.price} coins</span>
                 <div class="m-track"><div class="m-fill" style="width:${Math.min(100, S.coins / a.price * 100)}%;background:linear-gradient(90deg,#FFE29A,#FFC94A)"></div></div></div>
@@ -936,22 +1011,36 @@ function renderAdopt() {
         }).join('')}
       </div>
     </div>`;
+
+  $$('.room-tab', v).forEach(tab => {
+    tab.addEventListener('click', () => {
+      Sound.play('tap');
+      S.currentRoom = tab.dataset.room;
+      save();
+      renderAdopt();
+    });
+  });
+
   $$('.adopt-btn', v).forEach(b => b.addEventListener('click', () => {
     const a = list.find(x => x.breed === b.dataset.breed);
     Sound.play('meow');
-    openAdoptName(a);
+    openAdoptName(a, currentOp);
   }));
 }
 
-function openAdoptName(a) {
+function openAdoptName(a, currentOp) {
   const isDino = S.theme === 'dino';
   const breeds = isDino ? DINO_BREEDS : BREEDS;
   const br = breeds[a.breed] || BREEDS.orange;
   const dummyPet = { id: S.nextCatId, breed: a.breed };
+  const targetRoom = currentOp || S.currentRoom || 'x';
+  const rooms = isDino ? ROOMS.dino : ROOMS.cat;
+  const roomObj = rooms.find(r => r.id === targetRoom) || rooms[0];
+
   const ideas = [br.suggest, ...NAME_IDEAS.filter(n => !S.cats.some(c => c.name === n)).sort(() => Math.random() - 0.5).slice(0, 4)];
   UI.modal(`<div class="center">
       <div class="modal-cat">${petSVG(dummyPet, 'ecstatic')}</div>
-      <h2 class="modal-title">Name your new pet!</h2>
+      <h2 class="modal-title">Name your new pet for ${roomObj.name}!</h2>
       <input id="adopt-input" class="text-input" maxlength="14" value="${esc(br.suggest)}" autocomplete="off" autocorrect="off" spellcheck="false">
       <div class="name-ideas">${ideas.map(n => `<button class="chip sm" data-name="${esc(n)}">${esc(n)}</button>`).join('')}</div>
       <div class="modal-actions">
@@ -965,8 +1054,21 @@ function openAdoptName(a) {
         const name = input.value.trim();
         if (!name) return;
         if (!spendCoins(a.price)) return;
-        S.cats.push({ id: S.nextCatId++, breed: a.breed, name, hunger: 80, fun: 80, cozy: 80 });
-        S.adopted.push(a.breed);
+
+        S.cats.push({
+          id: S.nextCatId++,
+          breed: a.breed,
+          name,
+          hunger: 80, fun: 80, cozy: 80,
+          room: targetRoom,
+          equippedCostume: null
+        });
+
+        if (!S.adoptedByRoom) S.adoptedByRoom = { x: [], '+': [], '-': [], d: [] };
+        if (!S.adoptedByRoom[targetRoom]) S.adoptedByRoom[targetRoom] = [];
+        if (!S.adoptedByRoom[targetRoom].includes(a.breed)) S.adoptedByRoom[targetRoom].push(a.breed);
+        if (!S.adopted.includes(a.breed)) S.adopted.push(a.breed);
+
         save();
         close();
         Sound.play('fanfare');
@@ -974,9 +1076,9 @@ function openAdoptName(a) {
         UI.confetti();
         if (a.breed === 'unicorn') {
           setTimeout(() => UI.confetti(), 600);
-          UI.toast(`🦄✨ <b>${esc(name)}</b> the Magical Unicorn Kitty joined!`, 'gold', 5000);
+          UI.toast(`🦄✨ <b>${esc(name)}</b> joined <b>${roomObj.name}</b>!`, 'gold', 5000);
         } else {
-          UI.toast(`💖 <b>${esc(name)}</b> joined your home!`, 'gold', 3500);
+          UI.toast(`💖 <b>${esc(name)}</b> joined <b>${roomObj.name}</b>!`, 'gold', 3500);
         }
         Practice.refreshBuddy();
         showView('cafe');
