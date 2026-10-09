@@ -115,44 +115,113 @@ const Sound = (() => {
   function dinoRoar() {
     if (!ctx) return;
     const t0 = ctx.currentTime;
-    const p = 0.85 + Math.random() * 0.3;
-    const o = ctx.createOscillator();
-    const f = ctx.createBiquadFilter();
+    const dur = 1.1;
+    const pitchMod = 0.85 + Math.random() * 0.3;
+
+    // 1. Gritty Sawtooth Throat Oscillator
+    const o1 = ctx.createOscillator();
+    o1.type = 'sawtooth';
+    o1.frequency.setValueAtTime(110 * pitchMod, t0);
+    o1.frequency.exponentialRampToValueAtTime(320 * pitchMod, t0 + 0.2);
+    o1.frequency.exponentialRampToValueAtTime(95 * pitchMod, t0 + 0.7);
+    o1.frequency.exponentialRampToValueAtTime(45 * pitchMod, t0 + dur);
+
+    // 2. Heavy Sub-bass Sine Layer
+    const o2 = ctx.createOscillator();
+    o2.type = 'sine';
+    o2.frequency.setValueAtTime(75 * pitchMod, t0);
+    o2.frequency.exponentialRampToValueAtTime(140 * pitchMod, t0 + 0.2);
+    o2.frequency.exponentialRampToValueAtTime(40 * pitchMod, t0 + dur);
+
+    // 3. Throat Noise Growl (white noise with LFO growl modulation)
+    const bufLen = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+
+    // Growl Modulation (36Hz LFO)
+    const lfo = ctx.createOscillator();
+    lfo.frequency.setValueAtTime(36, t0);
+    lfo.frequency.linearRampToValueAtTime(22, t0 + dur);
+    const lfoGain = ctx.createGain();
+    lfoGain.gain.value = 0.6;
+    const noiseMod = ctx.createGain();
+    noiseMod.gain.value = 0.4;
+    lfo.connect(lfoGain);
+    lfoGain.connect(noiseMod.gain);
+
+    // Resonant Filter Sweep for guttural roar
+    const f1 = ctx.createBiquadFilter();
+    f1.type = 'bandpass';
+    f1.Q.value = 3.5;
+    f1.frequency.setValueAtTime(350, t0);
+    f1.frequency.exponentialRampToValueAtTime(2200, t0 + 0.22);
+    f1.frequency.exponentialRampToValueAtTime(300, t0 + dur);
+
+    // Lowpass filter to keep roar warm and deep
+    const f2 = ctx.createBiquadFilter();
+    f2.type = 'lowpass';
+    f2.frequency.setValueAtTime(3200, t0);
+
+    // Master Roar Envelope
     const g = ctx.createGain();
-
-    o.type = 'sawtooth';
-    o.frequency.setValueAtTime(140 * p, t0);
-    o.frequency.exponentialRampToValueAtTime(340 * p, t0 + 0.15);
-    o.frequency.exponentialRampToValueAtTime(120 * p, t0 + 0.6);
-    o.frequency.exponentialRampToValueAtTime(60 * p, t0 + 0.85);
-
-    f.type = 'lowpass';
-    f.frequency.setValueAtTime(450, t0);
-    f.frequency.exponentialRampToValueAtTime(1900, t0 + 0.18);
-    f.frequency.exponentialRampToValueAtTime(400, t0 + 0.8);
-
     g.gain.setValueAtTime(0.0001, t0);
-    g.gain.exponentialRampToValueAtTime(0.4, t0 + 0.08);
-    g.gain.exponentialRampToValueAtTime(0.25, t0 + 0.5);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
+    g.gain.exponentialRampToValueAtTime(0.55, t0 + 0.1);
+    g.gain.setValueAtTime(0.55, t0 + 0.4);
+    g.gain.exponentialRampToValueAtTime(0.35, t0 + 0.8);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
 
-    o.connect(f); f.connect(g); g.connect(master);
-    o.start(t0);
-    o.stop(t0 + 0.95);
+    // Connect nodes
+    o1.connect(f1);
+    o2.connect(f2);
+    noise.connect(noiseMod);
+    noiseMod.connect(f1);
+    f1.connect(f2);
+    f2.connect(g);
+    g.connect(master);
+
+    o1.start(t0); o2.start(t0); noise.start(t0); lfo.start(t0);
+    o1.stop(t0 + dur); o2.stop(t0 + dur); noise.stop(t0 + dur); lfo.stop(t0 + dur);
   }
 
   function dinoStomp() {
     if (!ctx) return;
     const t0 = ctx.currentTime;
+    const dur = 0.55;
+
+    // 1. Heavy Sub-bass Drop
     const o = ctx.createOscillator();
-    const g = ctx.createGain();
+    const gSub = ctx.createGain();
     o.type = 'sine';
-    o.frequency.setValueAtTime(130, t0);
-    o.frequency.exponentialRampToValueAtTime(35, t0 + 0.4);
-    g.gain.setValueAtTime(0.45, t0);
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.45);
-    o.connect(g); g.connect(master);
-    o.start(t0); o.stop(t0 + 0.5);
+    o.frequency.setValueAtTime(180, t0);
+    o.frequency.exponentialRampToValueAtTime(28, t0 + 0.35);
+    gSub.gain.setValueAtTime(0.65, t0);
+    gSub.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+    // 2. Earth Crunch Noise Punch
+    const bufLen = Math.floor(ctx.sampleRate * dur);
+    const buf = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.setValueAtTime(220, t0);
+    lp.frequency.exponentialRampToValueAtTime(40, t0 + 0.3);
+
+    const gNoise = ctx.createGain();
+    gNoise.gain.setValueAtTime(0.5, t0);
+    gNoise.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.35);
+
+    o.connect(gSub); gSub.connect(master);
+    noise.connect(lp); lp.connect(gNoise); gNoise.connect(master);
+
+    o.start(t0); noise.start(t0);
+    o.stop(t0 + dur); noise.stop(t0 + dur);
   }
 
   function pianoKey() {
