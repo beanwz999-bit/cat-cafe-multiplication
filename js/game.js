@@ -34,7 +34,7 @@ function defaultState() {
     coins: 0,
     totalEarned: 0,
     lastSeen: Date.now(),
-    settings: { sound: true, division: false, addition: false, subtraction: false, upTo15: false, tables: ALL_TABLES.slice(), mode: 'x' },
+    settings: { sound: true, multiplication: true, division: false, addition: false, subtraction: false, upTo15: false, tables: ALL_TABLES.slice(), mode: 'x' },
     cats: [],
     inventory: {},
     ownedCostumes: [],
@@ -71,7 +71,8 @@ function normalizeState(s) {
   });
   if (!s.inventory) s.inventory = {};
   if (!s.facts) s.facts = {};
-  if (!s.settings) s.settings = { sound: true, division: false, addition: false, subtraction: false, upTo15: false, tables: ALL_TABLES.slice(), mode: 'x' };
+  if (!s.settings) s.settings = { sound: true, multiplication: true, division: false, addition: false, subtraction: false, upTo15: false, tables: ALL_TABLES.slice(), mode: 'x' };
+  if (s.settings.multiplication === undefined) s.settings.multiplication = true;
   if (!s.stats) s.stats = { answered: 0, correct: 0, bestStreak: 0, speedBest: { x: 0, d: 0, mix: 0 } };
 }
 
@@ -587,7 +588,7 @@ function renderCafe() {
       if (rId === '+') { S.settings.addition = true; S.settings.mode = '+'; }
       else if (rId === '-') { S.settings.subtraction = true; S.settings.mode = '-'; }
       else if (rId === 'd') { S.settings.division = true; S.settings.mode = 'd'; }
-      else { S.settings.mode = 'x'; }
+      else { S.settings.multiplication = true; S.settings.mode = 'x'; }
 
       save();
       renderCafe();
@@ -1112,16 +1113,19 @@ const SPROUTS = ['', '🌱', '🌿'];
 
 function renderGarden() {
   const v = $('#view-garden');
+  const hasMult = S.settings.multiplication !== false || Object.keys(S.facts).some(k => k[0] === 'x');
   const hasDiv = S.settings.division || Object.keys(S.facts).some(k => k[0] === 'd');
   const hasAdd = S.settings.addition || Object.keys(S.facts).some(k => k[0] === '+');
   const hasSub = S.settings.subtraction || Object.keys(S.facts).some(k => k[0] === '-');
 
-  const enabledOps = ['x'];
-  if (hasDiv) enabledOps.push('d');
+  const enabledOps = [];
   if (hasAdd) enabledOps.push('+');
   if (hasSub) enabledOps.push('-');
+  if (hasMult) enabledOps.push('x');
+  if (hasDiv) enabledOps.push('d');
+  if (!enabledOps.length) enabledOps.push('x');
 
-  if (!enabledOps.includes(gardenOp)) gardenOp = 'x';
+  if (!enabledOps.includes(gardenOp)) gardenOp = enabledOps[0];
   const op = gardenOp;
 
   const maxN = (S.settings.upTo15 || Object.keys(S.facts).some(k => {
@@ -1157,7 +1161,7 @@ function renderGarden() {
         ${enabledOps.length > 1 ? `<div class="seg" id="garden-seg">
           ${hasAdd ? `<button data-op="+" class="${op === '+' ? 'on' : ''}">+ Add</button>` : ''}
           ${hasSub ? `<button data-op="-" class="${op === '-' ? 'on' : ''}">- Sub</button>` : ''}
-          <button data-op="x" class="${op === 'x' ? 'on' : ''}">× Times</button>
+          ${hasMult ? `<button data-op="x" class="${op === 'x' ? 'on' : ''}">× Times</button>` : ''}
           ${hasDiv ? `<button data-op="d" class="${op === 'd' ? 'on' : ''}">÷ Divide</button>` : ''}
         </div>` : ''}
       </div>
@@ -1268,6 +1272,10 @@ function openSettings() {
       <button class="toggle ${S.settings.sound ? 'on' : ''}" id="set-sound" aria-label="Sounds"></button>
     </div>
     <div class="set-row">
+      <div><b>✖️ Include multiplication</b><small>Adds × multiplication problems and garden</small></div>
+      <button class="toggle ${S.settings.multiplication !== false ? 'on' : ''}" id="set-mult" aria-label="Include multiplication"></button>
+    </div>
+    <div class="set-row">
       <div><b>➕ Include addition</b><small>Adds + addition problems and garden</small></div>
       <button class="toggle ${S.settings.addition ? 'on' : ''}" id="set-add" aria-label="Include addition"></button>
     </div>
@@ -1318,37 +1326,35 @@ function openSettings() {
         Sound.play('meow');
         save();
       });
-      $('#set-add', m).addEventListener('click', e => {
-        S.settings.addition = !S.settings.addition;
-        e.currentTarget.classList.toggle('on', S.settings.addition);
+
+      const toggleOp = (key, name, btnEl) => {
+        const willEnable = !S.settings[key];
+        if (!willEnable) {
+          const activeOps = Problems.enabledOps(S);
+          if (activeOps.length <= 1) {
+            UI.toast('⚠️ At least one math operation must remain enabled!');
+            return;
+          }
+        }
+        S.settings[key] = willEnable;
+        btnEl.classList.toggle('on', S.settings[key]);
         Sound.play('tap');
+        const available = Problems.enabledOps(S);
+        if (S.settings.mode !== 'mix' && !available.includes(S.settings.mode)) {
+          S.settings.mode = available[0];
+        }
         save();
         Practice.reset();
         if (currentView === 'practice') Practice.show();
         if (currentView === 'garden') renderGarden();
-        UI.toast(S.settings.addition ? '➕ Addition enabled!' : 'Addition off.');
-      });
-      $('#set-sub', m).addEventListener('click', e => {
-        S.settings.subtraction = !S.settings.subtraction;
-        e.currentTarget.classList.toggle('on', S.settings.subtraction);
-        Sound.play('tap');
-        save();
-        Practice.reset();
-        if (currentView === 'practice') Practice.show();
-        if (currentView === 'garden') renderGarden();
-        UI.toast(S.settings.subtraction ? '➖ Subtraction enabled!' : 'Subtraction off.');
-      });
-      $('#set-div', m).addEventListener('click', e => {
-        S.settings.division = !S.settings.division;
-        if (S.settings.division && S.settings.mode === 'x') S.settings.mode = 'mix';
-        e.currentTarget.classList.toggle('on', S.settings.division);
-        Sound.play('tap');
-        save();
-        Practice.reset();
-        if (currentView === 'practice') Practice.show();
-        if (currentView === 'garden') renderGarden();
-        UI.toast(S.settings.division ? '➗ Division enabled!' : 'Division off.');
-      });
+        if (currentView === 'cafe') renderCafe();
+        UI.toast(S.settings[key] ? `${name} enabled!` : `${name} off.`);
+      };
+
+      $('#set-mult', m).addEventListener('click', e => toggleOp('multiplication', '✖️ Multiplication', e.currentTarget));
+      $('#set-add', m).addEventListener('click', e => toggleOp('addition', '➕ Addition', e.currentTarget));
+      $('#set-sub', m).addEventListener('click', e => toggleOp('subtraction', '➖ Subtraction', e.currentTarget));
+      $('#set-div', m).addEventListener('click', e => toggleOp('division', '➗ Division', e.currentTarget));
       $('#set-15', m).addEventListener('click', e => {
         S.settings.upTo15 = !S.settings.upTo15;
         e.currentTarget.classList.toggle('on', S.settings.upTo15);

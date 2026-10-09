@@ -1,5 +1,5 @@
 /* Offline support: network-first, falling back to cache. */
-const CACHE = 'purrfect-v6';
+const CACHE = 'purrfect-v7';
 const ASSETS = [
   './', './index.html', './index.css', './manifest.json', './assets/icon.png', './assets/apple-touch-icon.png',
   './js/audio.js', './js/dinos.js', './js/cats.js', './js/problems.js', './js/shop.js', './js/ui.js', './js/practice.js', './js/game.js',

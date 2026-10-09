@@ -50,13 +50,14 @@ const Problems = (() => {
   }
 
   function enabledOps(state) {
-    const ops = ['x'];
+    const ops = [];
     if (state && state.settings) {
-      if (state.settings.division) ops.push('d');
+      if (state.settings.multiplication !== false) ops.push('x');
       if (state.settings.addition) ops.push('+');
       if (state.settings.subtraction) ops.push('-');
+      if (state.settings.division) ops.push('d');
     }
-    return ops;
+    return ops.length ? ops : ['x'];
   }
 
   function next(state, mode) {

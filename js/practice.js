@@ -34,7 +34,11 @@ function tablesLabel() {
 }
 
 function practiceMode() {
-  return S.settings.division ? S.settings.mode : 'x';
+  const enabled = Problems.enabledOps(S);
+  if (S.settings && S.settings.mode && (enabled.includes(S.settings.mode) || S.settings.mode === 'mix')) {
+    return S.settings.mode;
+  }
+  return enabled[0] || 'x';
 }
 
 /* ---------- Dot-array picture to help visualize facts ---------- */
