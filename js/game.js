@@ -366,7 +366,7 @@ function cafeTip() {
   }
   const tips = [
     '🐾 Watch your cats roam around the café and play with decor!',
-    '🌸 Get a fact right 3 times in a row and it blooms into a flower!',
+    '🌸 Get a fact right 5 times in a row to bloom a flower!',
     '⚡ Try a Speed Round to earn lots of cat coins fast!',
     '🪴 Make your café extra cozy with interactive decor from the Shop!',
   ];
@@ -796,7 +796,7 @@ function renderGarden() {
       <div class="page-head garden-head">
         <div>
           <h2 class="page-title">🌸 Fact Garden</h2>
-          <p class="page-sub">Get a fact right <b>3 times in a row</b> (first try) and it blooms!</p>
+          <p class="page-sub">Get a fact right <b>5 times in a row</b> (first try) and it blooms!</p>
         </div>
         ${hasDiv ? `<div class="seg" id="garden-seg">
           <button data-op="x" class="${op === 'x' ? 'on' : ''}">× Times</button>
@@ -809,9 +809,9 @@ function renderGarden() {
           <div class="m-track big"><div class="m-fill" style="width:${done / total * 100}%;background:linear-gradient(90deg,#9BE7C4,#FF8FAB)"></div></div>
           <div class="legend">
             <span><i class="lv0"></i> Not tried</span>
-            <span><i class="lv1">🌱</i> Planted</span>
-            <span><i class="lv2">🌿</i> Growing</span>
-            <span><i class="lv3">🌸</i> Bloomed</span>
+            <span><i class="lv1">🌱</i> Planted (1–2 in a row)</span>
+            <span><i class="lv2">🌿</i> Growing (3–4 in a row)</span>
+            <span><i class="lv3">🌸</i> Bloomed (5 in a row!)</span>
           </div>
           <p class="gp-tip">Tap any square to see the fact.</p>
           <div class="gp-detail" id="gp-detail"></div>
@@ -832,7 +832,8 @@ function renderGarden() {
     const f = S.facts[Problems.key(op, r, c)];
     const text = op === 'x' ? `${r} × ${c} = ${r * c}` : `${r * c} ÷ ${r} = ${c}`;
     const lv = Problems.level(f);
-    const status = ['Not tried yet', 'Planted! Keep practicing', `Growing! ${f ? f.streak : 0} in a row`, 'Bloomed! You know this one! 🎉'][lv];
+    const streakN = f ? f.streak : 0;
+    const status = ['Not tried yet', `Planted! ${streakN}/5 in a row`, `Growing! ${streakN}/5 in a row`, 'Bloomed! Mastered! 🎉'][lv];
     $$('.g-cell.sel', v).forEach(x => x.classList.remove('sel'));
     cell.classList.add('sel');
     Sound.play('pop');

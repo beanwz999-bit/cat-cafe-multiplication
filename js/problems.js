@@ -16,14 +16,15 @@ const Problems = (() => {
 
   function level(f) {
     if (!f || !f.seen) return 0;
-    if (f.mastered) return 3;
-    if (f.streak >= 1) return 2;
+    if (f.mastered || f.streak >= 5) return 3;
+    if (f.streak >= 3) return 2;
+    if (f.streak >= 1) return 1;
     return 1;
   }
 
   function weight(f) {
     if (!f || !f.seen) return 2.5;
-    const w = f.streak >= 3 ? 0.5 : 2 + Math.min(f.misses, 4) * 1.2 - f.streak * 0.4;
+    const w = f.streak >= 5 ? 0.4 : 2 + Math.min(f.misses, 4) * 1.2 - f.streak * 0.3;
     return Math.max(w, 0.4);
   }
 
@@ -58,7 +59,7 @@ const Problems = (() => {
         const k = key(op, a, b);
         if (recent.includes(k)) continue;
         let w = weight(state.facts[k]);
-        if (a === 1 || b === 1) w *= 0.35; // ×1 facts are easy; show them less
+        if (a === 1 || b === 1) w *= 0.35;
         cands.push([a, b, w]);
         total += w;
       }
@@ -83,7 +84,9 @@ const Problems = (() => {
     f.seen++;
     if (result === 'right') { f.right++; f.streak++; }
     else if (result === 'wrong') { f.misses++; f.streak = 0; }
-    if (!f.mastered && f.streak >= 3) {
+    
+    // Harder bloom condition: requires 5 consecutive first-try correct answers!
+    if (!f.mastered && f.streak >= 5) {
       f.mastered = true;
       return true;
     }
