@@ -16,15 +16,14 @@ const Problems = (() => {
 
   function level(f) {
     if (!f || !f.seen) return 0;
-    if (f.mastered || f.streak >= 5) return 3;
-    if (f.streak >= 3) return 2;
-    if (f.streak >= 1) return 1;
+    if (f.mastered || f.streak >= 3) return 3;
+    if (f.streak >= 1) return 2;
     return 1;
   }
 
   function weight(f) {
     if (!f || !f.seen) return 2.5;
-    const w = f.streak >= 5 ? 0.4 : 2 + Math.min(f.misses, 4) * 1.2 - f.streak * 0.3;
+    const w = f.streak >= 3 ? 0.5 : 2 + Math.min(f.misses, 4) * 1.2 - f.streak * 0.4;
     return Math.max(w, 0.4);
   }
 
@@ -85,8 +84,8 @@ const Problems = (() => {
     if (result === 'right') { f.right++; f.streak++; }
     else if (result === 'wrong') { f.misses++; f.streak = 0; }
     
-    // Harder bloom condition: requires 5 consecutive first-try correct answers!
-    if (!f.mastered && f.streak >= 5) {
+    // Bloom flower after 3 first-try correct answers in a row!
+    if (!f.mastered && f.streak >= 3) {
       f.mastered = true;
       return true;
     }
