@@ -45,7 +45,7 @@ let currentView = 'cafe';
 let shopTab = 'food';
 let gardenOp = 'x';
 let cafeAnimRaf = null;
-const catPos = {}; // Runtime cat positions, targets & actions
+const catPos = {};
 
 function save() {
   S.lastSeen = Date.now();
@@ -63,7 +63,7 @@ function addCoins(n, fromEl) {
   S.totalEarned += n;
   updateCoins(true);
   setTimeout(() => Sound.play('coin'), 120);
-  if (fromEl) UI.floatText(fromEl, `+${n} 🐟`);
+  if (fromEl) UI.floatText(fromEl, `+${n} 🪙`);
   save();
 }
 function spendCoins(n) {
@@ -161,7 +161,7 @@ const Onboarding = (() => {
         <div class="ob-card pop-in">
           <img class="ob-logo" src="assets/icon.png" alt="Cat Café logo">
           <h2 class="ob-title">Purr-fect Products</h2>
-          <p class="ob-sub">Run your very own <b>cat café</b>!<br>Solve math problems to earn 🐟 fish and take care of adorable kitties.</p>
+          <p class="ob-sub">Run your very own <b>cat café</b>!<br>Solve math problems to earn 🪙 <b>cat coins</b> and take care of adorable kitties.</p>
           <button class="btn btn-xl" id="ob-next">Let's go! 🐾</button>
         </div>`;
     } else if (step === 1) {
@@ -215,7 +215,7 @@ const Onboarding = (() => {
           <div class="how">
             <div class="how-step"><div class="how-icon">✖️</div><b>Solve</b><span>Answer times table problems</span></div>
             <div class="how-arrow">➜</div>
-            <div class="how-step"><div class="how-icon">🐟</div><b>Earn</b><span>Get fish coins for right answers</span></div>
+            <div class="how-step"><div class="how-icon">🪙</div><b>Earn</b><span>Get cat coins for right answers</span></div>
             <div class="how-arrow">➜</div>
             <div class="how-step"><div class="how-icon">😻</div><b>Care</b><span>Buy food, toys & beds for ${esc(data.kitten)}</span></div>
           </div>
@@ -277,7 +277,7 @@ const Onboarding = (() => {
     UI.confetti();
     Practice.reset();
     enterMain(false);
-    setTimeout(() => UI.toast(`🐱 Tap <b>${esc(S.cats[0].name)}</b> to say hi! Here are 10 🐟 to get started.`, 'info', 4000), 900);
+    setTimeout(() => UI.toast(`🐱 Tap <b>${esc(S.cats[0].name)}</b> to say hi! Here are 10 🪙 Cat Coins to get started.`, 'info', 4000), 900);
   }
 
   return { start };
@@ -358,17 +358,17 @@ function cafeTip() {
     const has = Object.entries(ITEMS).some(([id, it]) => (it.stat === need || it.stat === 'all' || it.stat === 'every') && (S.inventory[id] || 0) > 0);
     return has
       ? `${NEED_INFO[need].emoji} <b>${esc(c.name)}</b> ${NEED_INFO[need].want}! Tap ${esc(c.name)} to help.`
-      : `${NEED_INFO[need].emoji} <b>${esc(c.name)}</b> ${NEED_INFO[need].want}! Earn 🐟 and visit the <b>Shop</b>.`;
+      : `${NEED_INFO[need].emoji} <b>${esc(c.name)}</b> ${NEED_INFO[need].want}! Earn 🪙 <b>cat coins</b> in the Shop.`;
   }
   const nextCat = adoptionList(S).find(a => !a.adopted);
   if (nextCat && Problems.masteredCount(S) >= nextCat.flowers && S.coins >= nextCat.price) {
     return `🏠 A new kitty is waiting for you in <b>Adopt</b>!`;
   }
   const tips = [
-    '🐾 Watch your cats roam around the café and interact with decor!',
+    '🐾 Watch your cats roam around the café and play with decor!',
     '🌸 Get a fact right 3 times in a row and it blooms into a flower!',
-    '⚡ Try a Speed Round to earn lots of fish fast!',
-    '🪴 Make your café extra cozy with big interactive decor from the Shop!',
+    '⚡ Try a Speed Round to earn lots of cat coins fast!',
+    '🪴 Make your café extra cozy with interactive decor from the Shop!',
   ];
   return tips[Math.floor(Date.now() / 45000) % tips.length];
 }
@@ -419,7 +419,7 @@ function renderCafe() {
             <div class="m-track big"><div class="m-fill" style="width:${happy}%;background:linear-gradient(90deg,#FF8FAB,#FFD166)"></div></div>
             <b>${happy >= 80 ? '😻' : happy >= 55 ? '😺' : happy >= 35 ? '🐱' : '😿'}</b>
           </div>
-          <button class="btn btn-xl btn-block" id="cafe-play">✖️ Earn Fish</button>
+          <button class="btn btn-xl btn-block" id="cafe-play">✖️ Earn Cat Coins</button>
         </div>
         <div class="mini-stats">
           <div><b>${S.cats.length}</b><span>cats</span></div>
@@ -429,7 +429,6 @@ function renderCafe() {
       </aside>
     </div>`;
 
-  // Bind decor tap events
   $$('.decor-item', v).forEach(item => {
     item.addEventListener('click', e => {
       e.stopPropagation();
@@ -437,7 +436,6 @@ function renderCafe() {
     });
   });
 
-  // Bind cat click events
   $$('.cat-spot', v).forEach(b => b.addEventListener('click', e => {
     e.stopPropagation();
     UI.restartAnim(b, 'jump');
@@ -449,7 +447,6 @@ function renderCafe() {
   startCatRoamingLoop();
 }
 
-/* Roaming Cat Animation Engine */
 function startCatRoamingLoop() {
   if (cafeAnimRaf) cancelAnimationFrame(cafeAnimRaf);
 
@@ -482,7 +479,6 @@ function startCatRoamingLoop() {
           if (bob) bob.style.transform = `scaleX(${pos.facing})`;
           catEl.classList.add('is-walking');
         } else {
-          // Reached target spot!
           pos.x = pos.targetX;
           pos.y = pos.targetY;
           catEl.classList.remove('is-walking');
@@ -497,7 +493,6 @@ function startCatRoamingLoop() {
           }
         }
       } else if (now > pos.timer) {
-        // Pick new destination!
         const pickDecor = activeDecorKeys.length > 0 && Math.random() < 0.55;
         if (pickDecor) {
           const dKey = pick(activeDecorKeys);
@@ -545,12 +540,12 @@ function openCare(id) {
             <button class="give-btn" data-item="${itemId}" id="give-${itemId}">
               <span class="ge">${it.emoji}</span><span class="gn">${it.name}</span><span class="gc">×${S.inventory[itemId]}</span>
             </button>`).join('')}</div>`
-            : `<p class="empty-note">You don't have any items yet. Earn 🐟 by solving problems, then visit the Shop!</p>`}
+            : `<p class="empty-note">You don't have any items yet. Earn 🪙 cat coins by solving problems, then visit the Shop!</p>`}
           <div class="care-actions">
             <button class="btn btn-lav btn-sm" id="care-pet">🤚 Pet</button>
             <button class="btn btn-ghost btn-sm" id="care-rename">✏️ Rename</button>
             <button class="btn btn-sun btn-sm" id="care-shop">🛍️ Shop</button>
-            <button class="btn btn-sm" id="care-play">✖️ Earn Fish</button>
+            <button class="btn btn-sm" id="care-play">✖️ Earn Cat Coins</button>
           </div>`;
         $('#care-x', m).addEventListener('click', () => { Sound.play('tap'); close(); });
         $('#care-pet', m).addEventListener('click', () => {
@@ -639,7 +634,7 @@ function renderShop() {
     <div class="page">
       <div class="page-head">
         <h2 class="page-title">🛍️ Kitty Shop</h2>
-        <p class="page-sub">Spend your fish on treats, toys and interactive café decor!</p>
+        <p class="page-sub">Spend your cat coins on treats, toys and interactive café decor!</p>
       </div>
       <div class="seg shop-tabs" id="shop-tabs">
         ${SHOP_TABS.map(t => `<button data-tab="${t.id}" id="shop-tab-${t.id}" class="${t.id === shopTab ? 'on' : ''}">${t.emoji} ${t.label}</button>`).join('')}
@@ -650,14 +645,14 @@ function renderShop() {
           const afford = S.coins >= it.price;
           let btn;
           if (isDecor && owned) btn = `<button class="btn btn-ghost btn-sm" disabled>✓ In your café</button>`;
-          else if (afford) btn = `<button class="btn btn-mint btn-sm buy-btn" data-id="${id}" id="buy-${id}">Buy · ${it.price} 🐟</button>`;
-          else btn = `<button class="btn btn-ghost btn-sm" disabled>Need ${it.price - S.coins} more 🐟</button>`;
+          else if (afford) btn = `<button class="btn btn-mint btn-sm buy-btn" data-id="${id}" id="buy-${id}">Buy · ${it.price} 🪙</button>`;
+          else btn = `<button class="btn btn-ghost btn-sm" disabled>Need ${it.price - S.coins} more 🪙</button>`;
           return `<div class="shop-card ${isDecor && owned ? 'owned' : ''}">
               ${!isDecor && owned ? `<span class="owned-badge">×${owned}</span>` : ''}
               <div class="shop-emoji">${it.emoji}</div>
               <div class="shop-name">${it.name}</div>
               <div class="shop-desc">${it.desc}</div>
-              <div class="shop-price">${it.price} 🐟</div>
+              <div class="shop-price">${it.price} 🪙</div>
               ${btn}
             </div>`;
         }).join('')}
@@ -681,7 +676,7 @@ function buy(id, btn) {
   UI.floatText(btn, `${it.emoji}`, 'big');
   if (isDecor) {
     S.decor.push(id);
-    UI.toast(`${it.emoji} <b>${it.name}</b> added to your café! Cats can walk up and interact with it!`, 'gold');
+    UI.toast(`${it.emoji} <b>${it.name}</b> added to your café!`, 'gold');
     UI.confetti(60);
   } else {
     S.inventory[id] = (S.inventory[id] || 0) + 1;
@@ -701,7 +696,7 @@ function renderAdopt() {
     <div class="page">
       <div class="page-head">
         <h2 class="page-title">🐾 Adoption Center</h2>
-        <p class="page-sub">These kitties are looking for a home! Grow flowers 🌸 in your Fact Garden and save fish 🐟 to adopt them.</p>
+        <p class="page-sub">These kitties are looking for a home! Grow flowers 🌸 in your Fact Garden and save 🪙 <b>cat coins</b> to adopt them.</p>
       </div>
       ${remaining.length ? '' : `<div class="all-done">🎉 Every kitty has a home in your café! You're an amazing cat caretaker!</div>`}
       <div class="adopt-grid">
@@ -725,7 +720,7 @@ function renderAdopt() {
               <div class="adopt-blurb">${br.blurb}</div>
               <div class="req ${fOk ? 'ok' : ''}"><span>🌸 ${Math.min(flowers, a.flowers)}/${a.flowers} flowers</span>
                 <div class="m-track"><div class="m-fill" style="width:${Math.min(100, flowers / a.flowers * 100)}%;background:linear-gradient(90deg,#FFB3C8,#FF8FAB)"></div></div></div>
-              <div class="req ${cOk ? 'ok' : ''}"><span>🐟 ${Math.min(S.coins, a.price)}/${a.price} fish</span>
+              <div class="req ${cOk ? 'ok' : ''}"><span>🪙 ${Math.min(S.coins, a.price)}/${a.price} cat coins</span>
                 <div class="m-track"><div class="m-fill" style="width:${Math.min(100, S.coins / a.price * 100)}%;background:linear-gradient(90deg,#FFE29A,#FFC94A)"></div></div></div>
               ${isNext ? `<button class="btn btn-mint btn-sm adopt-btn" data-breed="${a.breed}" id="adopt-${a.breed}" ${fOk && cOk ? '' : 'disabled'}>${fOk && cOk ? 'Adopt 💖' : 'Keep practicing!'}</button>`
                 : `<div class="adopt-blurb muted">Adopt kitty #${i} first</div>`}
@@ -750,7 +745,7 @@ function openAdoptName(a) {
       <div class="name-ideas">${ideas.map(n => `<button class="chip sm" data-name="${esc(n)}">${esc(n)}</button>`).join('')}</div>
       <div class="modal-actions">
         <button class="btn btn-ghost" data-close>Not yet</button>
-        <button class="btn btn-mint" id="adopt-go">Adopt for ${a.price} 🐟</button>
+        <button class="btn btn-mint" id="adopt-go">Adopt for ${a.price} 🪙</button>
       </div></div>`, {
     onOpen: (m, close) => {
       const input = $('#adopt-input', m);
@@ -906,7 +901,7 @@ function openSettings() {
       ${tablesPickerHTML()}
     </div>
     <div class="set-row danger-zone">
-      <div><b>Start over</b><small>Erase all progress, cats and coins</small></div>
+      <div><b>Start over</b><small>Erase all progress, cats and cat coins</small></div>
       <button class="btn btn-danger btn-sm" id="set-reset">Reset game</button>
     </div>
     <div class="modal-actions"><button class="btn btn-mint" data-close id="set-done">Done</button></div>`, {
@@ -941,7 +936,7 @@ function openSettings() {
       });
       $('#set-reset', m).addEventListener('click', () => {
         close();
-        UI.confirm('Start over?', 'This erases all cats, fish coins and garden progress. This can’t be undone.', 'Yes, erase everything', () => {
+        UI.confirm('Start over?', 'This erases all cats, cat coins and garden progress. This can’t be undone.', 'Yes, erase everything', () => {
           localStorage.removeItem(SAVE_KEY);
           location.reload();
         });

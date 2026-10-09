@@ -3,7 +3,7 @@
    =========================================================== */
 const CHEERS = ['Purr-fect!', 'Meow-velous!', 'Paw-some!', 'Fur-tastic!', 'Claw-some!', 'Whisker-ific!',
   "You're the cat's pajamas!", 'Purr-ty amazing!', 'Hiss-tory in the making!', 'Feline fine!'];
-const BUDDY_CHEERS = ['Yay! You did it!', 'Purrrr… so smart!', 'Meow! More fish!', "You're amazing!", 'High five! 🐾', 'Woohoo!'];
+const BUDDY_CHEERS = ['Yay! You did it!', 'Purrrr… so smart!', 'Meow! More cat coins!', "You're amazing!", 'High five! 🐾', 'Woohoo!'];
 
 function numpadHTML() {
   return [1, 2, 3, 4, 5, 6, 7, 8, 9, 'back', 0, 'ok'].map(k => {
@@ -57,7 +57,7 @@ function pictureHTML(p, full) {
   } else if (full) {
     caption = `${p.left} shared into ${p.right} rows = <b>${p.answer}</b> in each row`;
   } else {
-    caption = `${p.left} fish shared into ${p.right} equal rows. How many in each row?`;
+    caption = `${p.left} treats shared into ${p.right} equal rows. How many in each row?`;
   }
   return `<div class="dots" style="--dot:${size}px">${dots}</div><div class="pic-caption">${caption}</div>`;
 }
@@ -95,7 +95,7 @@ const Practice = (() => {
           <div class="practice-left">
             <div class="session-bar">
               <div class="session-pill">🔥 <b id="streak-n">${streak}</b>&nbsp;in a row</div>
-              <div class="session-pill">🐟 +<b id="session-coins">${sessionCoins}</b>&nbsp;this time</div>
+              <div class="session-pill">🪙 +<b id="session-coins">${sessionCoins}</b>&nbsp;this time</div>
             </div>
             <div class="problem-card" id="problem-card">
               <div class="problem" id="problem"></div>
@@ -147,7 +147,6 @@ const Practice = (() => {
 
   function refreshBuddy() {
     if (!S.cats.length) return;
-    // The cat who needs the most care is your practice buddy
     buddyCat = [...S.cats].sort((a, b) => (a.hunger + a.fun + a.cozy) - (b.hunger + b.fun + b.cozy))[0];
     const el = $('#buddy');
     if (!el) return;
@@ -158,7 +157,7 @@ const Practice = (() => {
   function defaultLine() {
     const c = buddyCat;
     const [need, val] = neediest(c);
-    if (val < 50) return `${esc(c.name)} ${NEED_INFO[need].want}! Earn 🐟 to help!`;
+    if (val < 50) return `${esc(c.name)} ${NEED_INFO[need].want}! Earn 🪙 cat coins to help!`;
     return `${esc(c.name)} is cheering for you!`;
   }
 
@@ -243,7 +242,7 @@ const Practice = (() => {
           addCoins(5, $('#streak-n'));
           sessionCoins += 5;
           updateSession();
-          UI.toast(`🔥 <b>${streak} in a row!</b> +5 bonus fish!`, 'gold');
+          UI.toast(`🔥 <b>${streak} in a row!</b> +5 bonus cat coins! 🪙`, 'gold');
           UI.confetti(80);
         }, 500);
       }
@@ -346,7 +345,7 @@ const Speed = (() => {
         <h2>Speed Round!</h2>
         <p>Answer as many as you can in <b>60 seconds</b>.</p>
         <div class="speed-facts">
-          <div><span>🐟</span><b>2 fish</b> for every right answer</div>
+          <div><span>🪙</span><b>2 cat coins</b> for every right answer</div>
           <div><span>🏆</span><b>+10 bonus</b> for a new best score</div>
           <div><span>📚</span>${modeLabel()} · ${tablesLabel()}</div>
         </div>
@@ -446,7 +445,6 @@ const Speed = (() => {
       input += k;
       Sound.play('key');
       update();
-      // Auto-check once enough digits are typed (keeps it speedy)
       if (input.length >= String(cur.answer).length) check();
     }
   }
@@ -492,7 +490,7 @@ const Speed = (() => {
         <h2>${newBest ? 'New best score!' : "Time's up!"}</h2>
         <div class="final-score">${score}</div>
         <p>right answers${missed ? ` · ${missed} to practice` : ''}</p>
-        <div class="earned" id="sp-earned">+${coins} 🐟</div>
+        <div class="earned" id="sp-earned">+${coins} 🪙</div>
         <div class="speed-best">Best: <b>${S.stats.speedBest[m]}</b></div>
         <div class="modal-actions">
           <button class="btn btn-ghost" id="sp-done">Done</button>
