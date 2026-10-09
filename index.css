@@ -1615,6 +1615,38 @@ body.theme-dino .room-tab.on {
   box-shadow: 0 3px 8px rgba(0,0,0,0.25);
 }
 
+/* Room Visual Environments */
+.cafe-scene.room-patio .wall { background: linear-gradient(180deg, #D4EDDA 0%, #E8F5E9 100%); border-bottom-color: #A3D9A5; }
+.cafe-scene.room-patio .floor { background: repeating-linear-gradient(45deg, #CFD8DC 0px, #CFD8DC 30px, #ECEFF1 30px, #ECEFF1 60px); }
+
+.cafe-scene.room-sunroom .wall { background: linear-gradient(180deg, #FFF9C4 0%, #FFFDE7 100%); border-bottom-color: #FBC02D; }
+.cafe-scene.room-sunroom .floor { background: repeating-linear-gradient(90deg, #FFE082 0px, #FFE082 40px, #FFD54F 40px, #FFD54F 80px); }
+
+.cafe-scene.room-playroom .wall { background: linear-gradient(180deg, #F3E5F5 0%, #F8BBD0 100%); border-bottom-color: #CE93D8; }
+.cafe-scene.room-playroom .floor { background: repeating-linear-gradient(90deg, #E1BEE7 0px, #E1BEE7 44px, #CE93D8 44px, #CE93D8 88px); }
+
+/* Prehistoric Dino Zoo Room Environments */
+body.theme-dino .cafe-scene.room-patio .wall.dino-wall {
+  background: linear-gradient(180deg, #BF360C 0%, #E65100 40%, #5D4037 100%);
+}
+body.theme-dino .cafe-scene.room-patio .floor.dino-dirt-floor {
+  background: linear-gradient(180deg, #3E2723 0%, #212121 100%);
+}
+
+body.theme-dino .cafe-scene.room-sunroom .wall.dino-wall {
+  background: linear-gradient(180deg, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%);
+}
+body.theme-dino .cafe-scene.room-sunroom .floor.dino-dirt-floor {
+  background: linear-gradient(180deg, #33691E 0%, #1B5E20 100%);
+}
+
+body.theme-dino .cafe-scene.room-playroom .wall.dino-wall {
+  background: linear-gradient(180deg, #4E342E 0%, #6D4C41 60%, #8D6E63 100%);
+}
+body.theme-dino .cafe-scene.room-playroom .floor.dino-dirt-floor {
+  background: linear-gradient(180deg, #3E2723 0%, #4E342E 100%);
+}
+
 /* View: Fact Garden */
 .garden-head {
   flex-direction: row;

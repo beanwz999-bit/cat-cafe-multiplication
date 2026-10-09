@@ -494,7 +494,7 @@ function renderCafe() {
 
   v.innerHTML = `
     <div class="cafe ${isDino ? 'dino-zoo-layout' : ''}">
-      <div class="cafe-scene ${isDino ? 'dino-scene' : ''}" id="cafe-scene">
+      <div class="cafe-scene ${isDino ? 'dino-scene' : ''} room-${currentRoom}" id="cafe-scene">
         <div class="room-selector">
           ${rooms.map(r => `<button class="room-tab ${r.id === currentRoom ? 'on' : ''}" data-room="${r.id}">${r.icon} ${r.name}</button>`).join('')}
         </div>
