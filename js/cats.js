@@ -186,4 +186,3 @@ function catSVG(breedKey, mood = 'happy') {
     </g>
   </svg>`;
 }
-}

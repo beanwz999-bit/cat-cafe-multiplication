@@ -6,6 +6,11 @@ const SAVE_KEY = 'purrfect-products-v1';
 const ALL_TABLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
 const NEEDS = ['hunger', 'fun', 'cozy'];
 
+function getAllTables() {
+  const maxT = (S && S.settings && S.settings.upTo15) ? 15 : 12;
+  return Array.from({ length: maxT }, (_, i) => i + 1);
+}
+
 function defaultState() {
   return {
     version: 1,
@@ -13,7 +18,7 @@ function defaultState() {
     coins: 0,
     totalEarned: 0,
     lastSeen: Date.now(),
-    settings: { sound: true, division: false, tables: ALL_TABLES.slice(), mode: 'x' },
+    settings: { sound: true, division: false, upTo15: false, tables: ALL_TABLES.slice(), mode: 'x' },
     cats: [],
     inventory: {},
     decor: [],
@@ -783,13 +788,17 @@ function renderGarden() {
   const hasDiv = S.settings.division || Object.keys(S.facts).some(k => k[0] === 'd');
   if (!hasDiv) gardenOp = 'x';
   const op = gardenOp;
-  const total = 144;
+  const maxN = (S.settings.upTo15 || Object.keys(S.facts).some(k => {
+    const parts = k.slice(1).split('-');
+    return +parts[0] > 12 || +parts[1] > 12;
+  })) ? 15 : 12;
+  const total = maxN * maxN;
   const done = Problems.masteredCount(S, op);
   let grid = `<div class="g-head corner">${op === 'x' ? '×' : '÷'}</div>`;
-  for (let c = 1; c <= 12; c++) grid += `<div class="g-head">${c}</div>`;
-  for (let r = 1; r <= 12; r++) {
+  for (let c = 1; c <= maxN; c++) grid += `<div class="g-head">${c}</div>`;
+  for (let r = 1; r <= maxN; r++) {
     grid += `<div class="g-head">${r}</div>`;
-    for (let c = 1; c <= 12; c++) {
+    for (let c = 1; c <= maxN; c++) {
       const f = S.facts[Problems.key(op, r, c)];
       const lv = Problems.level(f);
       const icon = lv === 3 ? FLOWERS[(r + c) % FLOWERS.length] : SPROUTS[lv];
@@ -821,7 +830,7 @@ function renderGarden() {
           <p class="gp-tip">Tap any square to see the fact.</p>
           <div class="gp-detail" id="gp-detail"></div>
         </div>
-        <div class="garden-grid">${grid}</div>
+        <div class="garden-grid" style="grid-template-columns: repeat(${maxN + 1}, minmax(0, 1fr))">${grid}</div>
       </div>
     </div>`;
   const seg = $('#garden-seg');
@@ -849,14 +858,15 @@ function renderGarden() {
 
 /* =========================== Settings =========================== */
 function tablesPickerHTML() {
+  const all = getAllTables();
   return `<div class="table-grid" id="table-grid">
-      ${ALL_TABLES.map(t => `<button class="table-chip ${S.settings.tables.includes(t) ? 'on' : ''}" data-t="${t}" id="table-${t}">${t}s</button>`).join('')}
+      ${all.map(t => `<button class="table-chip ${S.settings.tables.includes(t) ? 'on' : ''}" data-t="${t}" id="table-${t}">${t}s</button>`).join('')}
     </div>
     <div class="table-quick">
       <button class="chip sm" data-q="all">All</button>
       <button class="chip sm" data-q="easy">Easy (1, 2, 5, 10)</button>
       <button class="chip sm" data-q="mid">3, 4, 6</button>
-      <button class="chip sm" data-q="hard">Tricky (7, 8, 9, 11, 12)</button>
+      <button class="chip sm" data-q="hard">${S.settings.upTo15 ? '7 - 15' : 'Tricky (7, 8, 9, 11, 12)'}</button>
     </div>`;
 }
 
@@ -878,7 +888,12 @@ function bindTablesPicker(root, onChange) {
     Sound.play('tap');
     sync();
   }));
-  const presets = { all: ALL_TABLES.slice(), easy: [1, 2, 5, 10], mid: [3, 4, 6], hard: [7, 8, 9, 11, 12] };
+  const presets = {
+    all: getAllTables(),
+    easy: [1, 2, 5, 10],
+    mid: [3, 4, 6],
+    hard: S.settings.upTo15 ? [7, 8, 9, 11, 12, 13, 14, 15] : [7, 8, 9, 11, 12]
+  };
   $$('.table-quick .chip', root).forEach(ch => ch.addEventListener('click', () => {
     S.settings.tables = presets[ch.dataset.q].slice();
     Sound.play('tap');
@@ -902,7 +917,11 @@ function openSettings() {
       <div><b>➗ Include division</b><small>Adds ÷ problems, a Divide mode and a division garden</small></div>
       <button class="toggle ${S.settings.division ? 'on' : ''}" id="set-div" aria-label="Include division"></button>
     </div>
-    <div class="set-block">
+    <div class="set-row">
+      <div><b>🚀 Practice up to 15 × 15</b><small>Adds 13s, 14s, and 15s to practice tables and Fact Garden</small></div>
+      <button class="toggle ${S.settings.upTo15 ? 'on' : ''}" id="set-15" aria-label="Practice up to 15"></button>
+    </div>
+    <div class="set-block" id="table-picker-wrap">
       <b>📚 Times tables to practice</b>
       ${tablesPickerHTML()}
     </div>
@@ -935,6 +954,30 @@ function openSettings() {
         if (currentView === 'practice') Practice.show();
         if (currentView === 'garden') renderGarden();
         UI.toast(S.settings.division ? '➗ Division is on! Choose Times, Divide or Mix in Practice.' : 'Division is off.');
+      });
+      $('#set-15', m).addEventListener('click', e => {
+        S.settings.upTo15 = !S.settings.upTo15;
+        e.currentTarget.classList.toggle('on', S.settings.upTo15);
+        Sound.play('tap');
+        if (S.settings.upTo15) {
+          [13, 14, 15].forEach(t => { if (!S.settings.tables.includes(t)) S.settings.tables.push(t); });
+        } else {
+          S.settings.tables = S.settings.tables.filter(t => t <= 12);
+        }
+        S.settings.tables.sort((a, b) => a - b);
+        save();
+        const pickerWrap = $('#table-picker-wrap', m);
+        if (pickerWrap) {
+          pickerWrap.innerHTML = `<b>📚 Times tables to practice</b>${tablesPickerHTML()}`;
+          bindTablesPicker(m, () => {
+            Practice.reset();
+            if (currentView === 'practice') Practice.show();
+          });
+        }
+        Practice.reset();
+        if (currentView === 'practice') Practice.show();
+        if (currentView === 'garden') renderGarden();
+        UI.toast(S.settings.upTo15 ? '✨ Practice up to 15 × 15 enabled!' : 'Practice set back to 12 × 12.');
       });
       bindTablesPicker(m, () => {
         Practice.reset();

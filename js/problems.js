@@ -49,12 +49,14 @@ const Problems = (() => {
       return make(r.op, r.a, r.b);
     }
 
-    const tables = state.settings.tables.length ? state.settings.tables : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    const maxT = (state && state.settings && state.settings.upTo15) ? 15 : 12;
+    const defaultTables = Array.from({ length: maxT }, (_, i) => i + 1);
+    const tables = (state && state.settings && state.settings.tables && state.settings.tables.length) ? state.settings.tables : defaultTables;
     const op = mode === 'mix' ? (Math.random() < 0.5 ? 'x' : 'd') : mode;
     const cands = [];
     let total = 0;
     for (const a of tables) {
-      for (let b = 1; b <= 12; b++) {
+      for (let b = 1; b <= maxT; b++) {
         const k = key(op, a, b);
         if (recent.includes(k)) continue;
         let w = weight(state.facts[k]);
@@ -63,7 +65,7 @@ const Problems = (() => {
         total += w;
       }
     }
-    if (!cands.length) return make(op, tables[0], 1 + Math.floor(Math.random() * 12));
+    if (!cands.length) return make(op, tables[0], 1 + Math.floor(Math.random() * maxT));
     let r = Math.random() * total;
     for (const c of cands) {
       r -= c[2];

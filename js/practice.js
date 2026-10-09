@@ -27,7 +27,8 @@ function bindNumpad(el, onKey) {
 
 function tablesLabel() {
   const t = S.settings.tables;
-  if (t.length === 12) return 'All tables';
+  const maxT = S.settings.upTo15 ? 15 : 12;
+  if (t.length >= maxT) return `All tables (1-${maxT})`;
   if (t.length <= 4) return `Tables: ${t.join(', ')}`;
   return `${t.length} tables`;
 }
