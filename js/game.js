@@ -19,10 +19,10 @@ const ROOMS = {
     { id: 'playroom', name: '🎈 Playroom', icon: '🎈' },
   ],
   dino: [
-    { id: 'main', name: '🦕 Dino Park Main', icon: '🦕' },
-    { id: 'patio', name: '🌋 Crystal Crater', icon: '🌋' },
-    { id: 'sunroom', name: '🌴 Fern Valley', icon: '🌴' },
-    { id: 'playroom', name: '🦴 Fossil Cave', icon: '🦴' },
+    { id: 'main', name: '🦕 T-Rex Enclosure', icon: '🦕' },
+    { id: 'patio', name: '🌋 Volcano Ridge', icon: '🌋' },
+    { id: 'sunroom', name: '🌴 Fern Jungle', icon: '🌴' },
+    { id: 'playroom', name: '🦴 Fossil Safari Dig', icon: '🦴' },
   ],
 };
 
@@ -142,9 +142,13 @@ function showView(name) {
 }
 
 function updateHeader() {
-  $('#cafe-title').textContent = `${S.playerName}'s Cat Café`;
-  document.title = `${S.playerName}'s Cat Café – Purr-fect Products`;
-  if (S.cats[0]) $('#brand-cat').innerHTML = catSVG(S.cats[0].breed, 'happy');
+  const isDino = S.theme === 'dino';
+  const title = isDino ? `${S.playerName}'s Dino Zoo` : `${S.playerName}'s Cat Café`;
+  $('#cafe-title').textContent = title;
+  document.title = `${title} – Purr-fect Products`;
+  if (S.cats[0]) {
+    $('#brand-cat').innerHTML = isDino ? dinoSVG(S.cats[0].breed, 'happy') : catSVG(S.cats[0].breed, 'happy');
+  }
   updateCoins(false);
 }
 
@@ -313,19 +317,20 @@ const Onboarding = (() => {
 
 /* =========================== Interactive Decor =========================== */
 function decorHTML() {
+  const isDino = S.theme === 'dino';
   const has = id => S.decor.includes(id);
   let wall = '', floor = '', top = '';
   if (has('lights')) {
-    const colors = ['#FF8FAB', '#FFD166', '#6FD6B4', '#8CC8FF', '#B9A2FF'];
+    const colors = isDino ? ['#90BE6D', '#FFD166', '#43AA8B', '#F9C74F', '#277DA1'] : ['#FF8FAB', '#FFD166', '#6FD6B4', '#8CC8FF', '#B9A2FF'];
     top += `<div class="decor-item decor-lights" data-decor="lights">${Array.from({ length: 18 }, (_, i) => `<i style="--c:${colors[i % 5]};animation-delay:${(i % 4) * 0.4}s"></i>`).join('')}</div>`;
   }
-  if (has('painting')) wall += `<button class="decor-item decor-painting" data-decor="painting"><span>🖼️</span><span class="d-sub">🐟</span></button>`;
-  if (has('lamp')) wall += `<button class="decor-item decor-lamp" data-decor="lamp">🌙</button>`;
-  if (has('tank')) wall += `<button class="decor-item decor-tank" data-decor="tank"><span class="fish f1">🐠</span><span class="fish f2">🐟</span><span class="bubble b1"></span><span class="bubble b2"></span></button>`;
-  if (has('balloons')) wall += `<button class="decor-item decor-balloons" data-decor="balloons">🎈<span>🎈</span></button>`;
+  if (has('painting')) wall += `<button class="decor-item decor-painting" data-decor="painting"><span>🖼️</span><span class="d-sub">${isDino ? '🦖' : '🐟'}</span></button>`;
+  if (has('lamp')) wall += `<button class="decor-item decor-lamp" data-decor="lamp">${isDino ? '🔥' : '🌙'}</button>`;
+  if (has('tank')) wall += `<button class="decor-item decor-tank" data-decor="tank"><span class="fish f1">${isDino ? '🐊' : '🐠'}</span><span class="fish f2">${isDino ? '🦕' : '🐟'}</span><span class="bubble b1"></span><span class="bubble b2"></span></button>`;
+  if (has('balloons')) wall += `<button class="decor-item decor-balloons" data-decor="balloons">🎈<span>${isDino ? '🦕' : '🎈'}</span></button>`;
   if (has('rug')) floor += `<button class="decor-item decor-rug" data-decor="rug"></button>`;
-  if (has('plant')) floor += `<button class="decor-item decor-plant" data-decor="plant">🪴</button>`;
-  if (has('castle')) floor += `<button class="decor-item decor-castle" data-decor="castle">🏰</button>`;
+  if (has('plant')) floor += `<button class="decor-item decor-plant" data-decor="plant">${isDino ? '🌴' : '🪴'}</button>`;
+  if (has('castle')) floor += `<button class="decor-item decor-castle" data-decor="castle">${isDino ? '🌋' : '🏰'}</button>`;
   if (has('piano')) floor += `<button class="decor-item decor-piano" data-decor="piano">🎹</button>`;
   return { wall, floor, top };
 }
@@ -341,15 +346,15 @@ function interactWithDecor(decorId, fromCat = null) {
     Sound.play('pianoKey');
     UI.floatText(el || $('#view-cafe'), '🎵', 'big');
   } else if (decorId === 'tank') {
-    UI.floatText(el || $('#view-cafe'), '🐠', 'big');
+    UI.floatText(el || $('#view-cafe'), S.theme === 'dino' ? '🐊' : '🐠', 'big');
   } else if (decorId === 'plant') {
-    UI.hearts(el || $('#view-cafe'), ['🌿', '🌸', '💖']);
+    UI.hearts(el || $('#view-cafe'), S.theme === 'dino' ? ['🌿', '🌴', '💚'] : ['🌿', '🌸', '💖']);
   } else if (decorId === 'castle') {
-    UI.floatText(el || $('#view-cafe'), '🏰', 'big');
+    UI.floatText(el || $('#view-cafe'), S.theme === 'dino' ? '🌋' : '🏰', 'big');
   } else if (decorId === 'rug') {
     UI.floatText(el || $('#view-cafe'), '💤', 'big');
   } else if (decorId === 'balloons') {
-    UI.floatText(el || $('#view-cafe'), '🎈', 'big');
+    UI.floatText(el || $('#view-cafe'), S.theme === 'dino' ? '🦕' : '🎈', 'big');
   }
 }
 
@@ -382,17 +387,23 @@ function cafeTip() {
   const sorted = [...S.cats].sort((a, b) => Math.min(a.hunger, a.fun, a.cozy) - Math.min(b.hunger, b.fun, b.cozy));
   const c = sorted[0];
   const [need, val] = neediest(c);
+  const isDino = S.theme === 'dino';
   if (val < 45) {
     const has = Object.entries(ITEMS).some(([id, it]) => (it.stat === need || it.stat === 'all' || it.stat === 'every') && (S.inventory[id] || 0) > 0);
     return has
       ? `${NEED_INFO[need].emoji} <b>${esc(c.name)}</b> ${NEED_INFO[need].want}! Tap ${esc(c.name)} to help.`
-      : `${NEED_INFO[need].emoji} <b>${esc(c.name)}</b> ${NEED_INFO[need].want}! Earn 🪙 <b>cat coins</b> in the Shop.`;
+      : `${NEED_INFO[need].emoji} <b>${esc(c.name)}</b> ${NEED_INFO[need].want}! Earn 🪙 <b>${isDino ? 'dino coins' : 'cat coins'}</b> in the Shop.`;
   }
   const nextCat = adoptionList(S).find(a => !a.adopted);
   if (nextCat && Problems.masteredCount(S) >= nextCat.flowers && S.coins >= nextCat.price) {
-    return `🏠 A new kitty is waiting for you in <b>Adopt</b>!`;
+    return isDino ? `🥚 A new dinosaur is ready in <b>Adopt</b>!` : `🏠 A new kitty is waiting for you in <b>Adopt</b>!`;
   }
-  const tips = [
+  const tips = isDino ? [
+    '🦕 Watch your dinosaurs roam around their prehistoric habitat!',
+    '🌸 Get a fact right 3 times in a row to bloom a flower!',
+    '⚡ Try a Speed Round to earn lots of dino coins fast!',
+    '🌋 Decorate your prehistoric zoo with cool items from the Shop!',
+  ] : [
     '🐾 Watch your cats roam around the café and play with decor!',
     '🌸 Get a fact right 3 times in a row to bloom a flower!',
     '⚡ Try a Speed Round to earn lots of cat coins fast!',
@@ -402,8 +413,14 @@ function cafeTip() {
 }
 
 function updateThemeBody() {
-  if (S.theme === 'dino') document.body.classList.add('theme-dino');
+  const isDino = S.theme === 'dino';
+  if (isDino) document.body.classList.add('theme-dino');
   else document.body.classList.remove('theme-dino');
+
+  const tabCafe = $('#tab-cafe');
+  if (tabCafe) tabCafe.innerHTML = isDino ? `<span class="ti">🦕</span>Dino Zoo` : `<span class="ti">🏠</span>Café`;
+  const tabAdopt = $('#tab-adopt');
+  if (tabAdopt) tabAdopt.innerHTML = isDino ? `<span class="ti">🥚</span>Adopt` : `<span class="ti">🐾</span>Adopt`;
 }
 
 function renderCafe() {
@@ -416,7 +433,7 @@ function renderCafe() {
   const rooms = isDino ? ROOMS.dino : ROOMS.cat;
   const currentRoom = S.currentRoom || 'main';
   const roomObj = rooms.find(r => r.id === currentRoom) || rooms[0];
-  const titleSign = isDino ? `🦕 ${esc(S.playerName)}'s Dino Park — ${roomObj.name}` : `☕ ${esc(S.playerName)}'s Cat Café — ${roomObj.name}`;
+  const titleSign = isDino ? `🦕 ${esc(S.playerName)}'s Prehistoric Zoo — ${roomObj.name}` : `☕ ${esc(S.playerName)}'s Cat Café — ${roomObj.name}`;
   const coinLabel = isDino ? 'dino coins' : 'cat coins';
   const petLabel = isDino ? 'dinos' : 'cats';
 
@@ -439,30 +456,61 @@ function renderCafe() {
   const happy = S.cats.length ? Math.round(S.cats.reduce((s, c) => s + (c.hunger + c.fun + c.cozy) / 3, 0) / S.cats.length) : 0;
   const flowers = Problems.masteredCount(S);
 
+  const wallHTML = isDino ? `
+    <div class="wall dino-wall">
+      <div class="prehistoric-sky">
+        <div class="volcano-peak"><span class="v-smoke">🌋</span><div class="lava-glow"></div></div>
+        <div class="dino-sun">☀️</div>
+        <div class="cloud c1">☁️</div>
+        <div class="cloud c2">☁️</div>
+        <div class="pterodactyl-soar">🦖</div>
+      </div>
+      <div class="jungle-vines-top">🌿 🌴 🌿 🌴 🌿</div>
+      <div class="palisade-fence-line">
+        <div class="dino-zoo-plaque">⚠️ JURASSIC ZOO HABITAT 🦕</div>
+      </div>
+      <div class="cafe-sign dino-wood-sign">${titleSign}</div>
+      <div class="shelf dino-log-shelf"><span>🥚</span><span>💎</span><span>🦴</span><span>🪴</span></div>
+      ${d.wall}
+    </div>
+  ` : `
+    <div class="wall">
+      <div class="window"><div class="sky"><span class="sun"></span><span class="cloud c1"></span><span class="cloud c2"></span></div></div>
+      <div class="cafe-sign">${titleSign}</div>
+      <div class="shelf"><span>☕</span><span>🧁</span><span>🍩</span></div>
+      ${d.wall}
+    </div>
+  `;
+
+  const floorHTML = isDino ? `
+    <div class="floor dino-dirt-floor">
+      <div class="dino-footprints">🐾 &nbsp; &nbsp; 🐾 &nbsp; &nbsp; 🐾</div>
+      <div class="fence-posts">🪵 &nbsp; &nbsp; &nbsp; 🪵 &nbsp; &nbsp; &nbsp; 🪵</div>
+      ${d.floor}
+    </div>
+  ` : `
+    <div class="floor">${d.floor}</div>
+  `;
+
   v.innerHTML = `
-    <div class="cafe">
-      <div class="cafe-scene" id="cafe-scene">
+    <div class="cafe ${isDino ? 'dino-zoo-layout' : ''}">
+      <div class="cafe-scene ${isDino ? 'dino-scene' : ''}" id="cafe-scene">
         <div class="room-selector">
           ${rooms.map(r => `<button class="room-tab ${r.id === currentRoom ? 'on' : ''}" data-room="${r.id}">${r.icon} ${r.name}</button>`).join('')}
         </div>
-        <div class="wall">
-          <div class="window"><div class="sky"><span class="sun"></span><span class="cloud c1"></span><span class="cloud c2"></span></div></div>
-          <div class="cafe-sign">${titleSign}</div>
-          <div class="shelf"><span>${isDino ? '🦕' : '☕'}</span><span>🧁</span><span>🍩</span></div>
-          ${d.wall}
-        </div>
-        <div class="floor">${d.floor}</div>
+        ${wallHTML}
+        ${floorHTML}
         ${d.top}
         <div class="cats-layer" id="cats-layer">${catsHTML}</div>
       </div>
       <aside class="cafe-panel">
         <div class="panel-card">
-          <div class="hello">Hi, ${esc(S.playerName)}! 👋</div>
+          <div class="hello">${isDino ? '🦖 Welcome to the Zoo,' : 'Hi,'} ${esc(S.playerName)}! 👋</div>
           <p class="tip">${cafeTip()}</p>
           <div class="happy-meter">
-            <span>Park happiness</span>
-            <div class="m-track big"><div class="m-fill" style="width:${happy}%;background:linear-gradient(90deg,#FF8FAB,#FFD166)"></div></div>
-            <b>${happy >= 80 ? '😻' : happy >= 55 ? '😺' : happy >= 35 ? '🐱' : '😿'}</b>
+            <span>${isDino ? 'Zoo happiness' : 'Park happiness'}</span>
+            <div class="m-track big"><div class="m-fill" style="width:${happy}%;background:linear-gradient(90deg, ${isDino ? '#90BE6D,#43AA8B' : '#FF8FAB,#FFD166'})"></div></div>
+            <b>${happy >= 80 ? (isDino ? '🦕' : '😻') : happy >= 55 ? (isDino ? '🦖' : '😺') : happy >= 35 ? (isDino ? '🐊' : '🐱') : (isDino ? '🦴' : '😿')}</b>
           </div>
           <button class="btn btn-xl btn-block" id="cafe-play">✖️ Earn Coins</button>
           <button class="btn btn-mint btn-block" id="cafe-wardrobe" style="margin-top:10px;">👗 Wardrobe & Costumes</button>
@@ -1091,8 +1139,8 @@ function openSettings() {
       <input id="set-name" class="text-input sm" maxlength="16" value="${esc(S.playerName)}" autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
     <div class="set-row">
-      <div><b>🎮 Game Theme</b><small>Switch between Cat Café and Dinosaur Park</small></div>
-      <button class="btn btn-mint btn-sm" id="set-theme">${S.theme === 'dino' ? '🦖 Dinosaur Park' : '🐱 Cat Café'}</button>
+      <div><b>🎮 Game Theme</b><small>Switch between Cat Café and Prehistoric Dino Zoo</small></div>
+      <button class="btn btn-mint btn-sm" id="set-theme">${S.theme === 'dino' ? '🦖 Prehistoric Dino Zoo' : '🐱 Cat Café'}</button>
     </div>
     <div class="set-row">
       <div><b>🔊 Sounds</b><small>Meows, purrs and chimes</small></div>
@@ -1119,7 +1167,7 @@ function openSettings() {
       ${tablesPickerHTML()}
     </div>
     <div class="set-row danger-zone">
-      <div><b>Start over</b><small>Erase all progress, pets and coins</small></div>
+      <div><b>⚠️ Reset Game</b><small>Erase all progress, pets, coins & flowers</small></div>
       <button class="btn btn-danger btn-sm" id="set-reset">Reset game</button>
     </div>
     <div class="modal-actions"><button class="btn btn-mint" data-close id="set-done">Done</button></div>`, {
@@ -1134,11 +1182,13 @@ function openSettings() {
         S.theme = S.theme === 'dino' ? 'cat' : 'dino';
         save();
         updateThemeBody();
-        e.currentTarget.textContent = S.theme === 'dino' ? '🦖 Dinosaur Park' : '🐱 Cat Café';
+        updateHeader();
+        e.currentTarget.textContent = S.theme === 'dino' ? '🦖 Prehistoric Dino Zoo' : '🐱 Cat Café';
         Sound.play('fanfare');
-        UI.toast(S.theme === 'dino' ? '🦖 Switched to Dinosaur Park Theme!' : '🐱 Switched to Cat Café Theme!');
+        UI.toast(S.theme === 'dino' ? '🦖 Switched to Outdoor Prehistoric Dino Zoo!' : '🐱 Switched to Cat Café Theme!');
         if (currentView === 'cafe') renderCafe();
         if (currentView === 'adopt') renderAdopt();
+        if (currentView === 'garden') renderGarden();
       });
       $('#set-sound', m).addEventListener('click', e => {
         S.settings.sound = !S.settings.sound;
