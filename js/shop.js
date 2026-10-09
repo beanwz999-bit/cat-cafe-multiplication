@@ -1,5 +1,5 @@
 /* ===========================================================
-   Shop items: consumables (care for cats) and decorations
+   Shop items: care consumables & interactive cafe decor
    =========================================================== */
 const ITEMS = {
   kibble:  { tab: 'food', name: 'Crunchy Kibble', emoji: '🥣', price: 5,  stat: 'hunger', amount: 25,  desc: '+25 Tummy' },
@@ -16,15 +16,15 @@ const ITEMS = {
 };
 
 const DECOR = {
-  plant:    { name: 'Potted Plant',   emoji: '🪴', price: 25,  desc: 'A leafy friend for the corner' },
-  balloons: { name: 'Party Balloons', emoji: '🎈', price: 35,  desc: 'Every day is a party!' },
-  rug:      { name: 'Rainbow Rug',    emoji: '🌈', price: 40,  desc: 'A soft, colorful rug' },
-  painting: { name: 'Fish Painting',  emoji: '🖼️', price: 45,  desc: 'Fancy art for the wall' },
-  lights:   { name: 'Fairy Lights',   emoji: '✨', price: 50,  desc: 'Twinkly lights' },
-  lamp:     { name: 'Moon Lamp',      emoji: '🌙', price: 60,  desc: 'A glowing moon' },
-  castle:   { name: 'Cat Castle',     emoji: '🏰', price: 80,  desc: 'A castle fit for cat royalty' },
-  tank:     { name: 'Fish Tank',      emoji: '🐠', price: 95,  desc: 'Cats LOVE watching fish' },
-  piano:    { name: 'Tiny Piano',     emoji: '🎹', price: 120, desc: 'For musical kitties' },
+  plant:    { name: 'Potted Plant',   emoji: '🪴', price: 25,  desc: 'A giant leafy plant for cats to sniff!', spot: { x: 10, y: 12 }, action: 'sniff', sound: 'purr' },
+  balloons: { name: 'Party Balloons', emoji: '🎈', price: 35,  desc: 'Bouncy balloons cats love to bat at!', spot: { x: 88, y: 35 }, action: 'bat', sound: 'pop' },
+  rug:      { name: 'Rainbow Rug',    emoji: '🌈', price: 40,  desc: 'A big soft rug for cat naps', spot: { x: 50, y: 16 }, action: 'nap', sound: 'purr' },
+  painting: { name: 'Fish Painting',  emoji: '🖼️', price: 45,  desc: 'Wall art kitties love to stare at', spot: { x: 30, y: 45 }, action: 'stare', sound: 'meow' },
+  lights:   { name: 'Fairy Lights',   emoji: '✨', price: 50,  desc: 'Twinkly lights that make the café glow', spot: { x: 50, y: 88 }, action: 'glow', sound: 'bloom' },
+  lamp:     { name: 'Moon Lamp',      emoji: '🌙', price: 60,  desc: 'A warm glowing moon lamp', spot: { x: 74, y: 44 }, action: 'warm', sound: 'purr' },
+  castle:   { name: 'Cat Castle',     emoji: '🏰', price: 80,  desc: 'A giant cat tree & castle to climb!', spot: { x: 84, y: 16 }, action: 'climb', sound: 'meow' },
+  tank:     { name: 'Fish Tank',      emoji: '🐠', price: 95,  desc: 'Aquarium where cats watch fish swim!', spot: { x: 22, y: 38 }, action: 'watch', sound: 'pop' },
+  piano:    { name: 'Tiny Piano',     emoji: '🎹', price: 120, desc: 'Cats walk over and play musical notes!', spot: { x: 36, y: 14 }, action: 'play', sound: 'pianoKey' },
 };
 
 const SHOP_TABS = [

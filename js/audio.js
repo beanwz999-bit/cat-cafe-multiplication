@@ -1,7 +1,5 @@
 /* ===========================================================
-   Sound effects — all synthesized with the Web Audio API,
-   so there are no audio files to download.
-   iPad/iOS requires audio to be "unlocked" by a touch first.
+   Sound effects — synthesized with the Web Audio API
    =========================================================== */
 const Sound = (() => {
   let ctx = null;
@@ -21,7 +19,6 @@ const Sound = (() => {
     return ctx;
   }
 
-  // Unlock audio on the first touch (required by iOS Safari)
   function unlock() {
     const c = ensure();
     if (c) {
@@ -39,6 +36,7 @@ const Sound = (() => {
 
   function tone(freq, start, dur, opts = {}) {
     const { type = 'sine', vol = 0.18, slideTo = null } = opts;
+    if (!ctx) return;
     const t0 = ctx.currentTime + start;
     const o = ctx.createOscillator();
     const g = ctx.createGain();
@@ -55,8 +53,9 @@ const Sound = (() => {
   }
 
   function meow() {
+    if (!ctx) return;
     const t0 = ctx.currentTime;
-    const p = 0.85 + Math.random() * 0.35; // each meow a little different
+    const p = 0.85 + Math.random() * 0.35;
     const o = ctx.createOscillator();
     const f = ctx.createBiquadFilter();
     const f2 = ctx.createBiquadFilter();
@@ -83,6 +82,7 @@ const Sound = (() => {
   }
 
   function purr() {
+    if (!ctx) return;
     const t0 = ctx.currentTime;
     const dur = 1.3;
     const len = Math.floor(ctx.sampleRate * dur);
@@ -110,6 +110,13 @@ const Sound = (() => {
     src.connect(lp); lp.connect(am); am.connect(env); env.connect(master);
     src.start(t0); lfo.start(t0);
     src.stop(t0 + dur); lfo.stop(t0 + dur);
+  }
+
+  function pianoKey() {
+    if (!ctx) return;
+    const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+    const n = notes[Math.floor(Math.random() * notes.length)];
+    tone(n, 0, 0.4, { type: 'triangle', vol: 0.2 });
   }
 
   const effects = {
@@ -150,6 +157,7 @@ const Sound = (() => {
       tone(1568, 0, 0.35, { type: 'sine', vol: 0.08 });
     },
     pop: () => tone(600, 0, 0.09, { type: 'sine', vol: 0.12, slideTo: 1200 }),
+    pianoKey,
     meow,
     purr,
   };

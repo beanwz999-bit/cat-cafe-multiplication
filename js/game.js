@@ -1,6 +1,6 @@
 /* ===========================================================
    Purr-fect Products — main game: state, onboarding, café,
-   shop, adoption, fact garden and settings.
+   shop, adoption, fact garden, interactive decor & roaming cats.
    =========================================================== */
 const SAVE_KEY = 'purrfect-products-v1';
 const ALL_TABLES = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -44,15 +44,18 @@ let S = loadState() || defaultState();
 let currentView = 'cafe';
 let shopTab = 'food';
 let gardenOp = 'x';
+let cafeAnimRaf = null;
+const catPos = {}; // Runtime cat positions, targets & actions
 
 function save() {
   S.lastSeen = Date.now();
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage full or private mode */ }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) { /* storage full */ }
 }
 
 /* ---------------- Coins ---------------- */
 function updateCoins(bump) {
-  $('#coin-count').textContent = S.coins;
+  const el = $('#coin-count');
+  if (el) el.textContent = S.coins;
   if (bump) UI.restartAnim($('#coin-pill'), 'bump');
 }
 function addCoins(n, fromEl) {
@@ -71,12 +74,11 @@ function spendCoins(n) {
   return true;
 }
 
-/* ---------------- Cat needs over time ---------------- */
+/* ---------------- Cat needs ---------------- */
 function applyOfflineDecay() {
   const hrs = (Date.now() - S.lastSeen) / 3600000;
   if (hrs < 0.05) return;
   const drop = Math.round(hrs * 6);
-  // Cats get a little hungry while you're away, but never too sad
   S.cats.forEach(c => NEEDS.forEach(k => { if (c[k] > 20) c[k] = Math.max(20, c[k] - drop); }));
   save();
 }
@@ -91,7 +93,6 @@ function tickNeeds() {
   }));
   if (warning) UI.toast(warning, 'warn');
   save();
-  if (currentView === 'cafe' && !UI.anyModalOpen()) renderCafe();
 }
 
 /* ---------------- Navigation ---------------- */
@@ -103,6 +104,12 @@ function showView(name) {
     t.classList.toggle('active', on);
     t.setAttribute('aria-selected', on);
   });
+
+  if (name !== 'cafe' && cafeAnimRaf) {
+    cancelAnimationFrame(cafeAnimRaf);
+    cafeAnimRaf = null;
+  }
+
   ({ cafe: renderCafe, practice: () => Practice.show(), shop: renderShop, adopt: renderAdopt, garden: renderGarden })[name]();
 }
 
@@ -276,28 +283,70 @@ const Onboarding = (() => {
   return { start };
 })();
 
-/* =========================== Café =========================== */
-const SPOTS = [
-  { x: 40, y: 7, s: 1 }, { x: 64, y: 11, s: 0.95 }, { x: 18, y: 12, s: 0.9 }, { x: 84, y: 16, s: 0.85 },
-  { x: 52, y: 24, s: 0.78 }, { x: 28, y: 27, s: 0.74 }, { x: 74, y: 29, s: 0.7 }, { x: 10, y: 30, s: 0.68 },
-];
-
+/* =========================== Interactive Decor =========================== */
 function decorHTML() {
   const has = id => S.decor.includes(id);
   let wall = '', floor = '', top = '';
   if (has('lights')) {
     const colors = ['#FF8FAB', '#FFD166', '#6FD6B4', '#8CC8FF', '#B9A2FF'];
-    top += `<div class="decor-lights">${Array.from({ length: 16 }, (_, i) => `<i style="--c:${colors[i % 5]};animation-delay:${(i % 4) * 0.4}s"></i>`).join('')}</div>`;
+    top += `<div class="decor-item decor-lights" data-decor="lights">${Array.from({ length: 18 }, (_, i) => `<i style="--c:${colors[i % 5]};animation-delay:${(i % 4) * 0.4}s"></i>`).join('')}</div>`;
   }
-  if (has('painting')) wall += `<div class="decor-painting"><span>🐟</span></div>`;
-  if (has('lamp')) wall += `<div class="decor-lamp">🌙</div>`;
-  if (has('tank')) wall += `<div class="decor-tank"><span class="fish f1">🐠</span><span class="fish f2">🐟</span><span class="bubble b1"></span><span class="bubble b2"></span></div>`;
-  if (has('balloons')) wall += `<div class="decor-balloons">🎈<span>🎈</span></div>`;
-  if (has('rug')) floor += `<div class="decor-rug"></div>`;
-  if (has('plant')) floor += `<div class="decor-emoji decor-plant">🪴</div>`;
-  if (has('castle')) floor += `<div class="decor-emoji decor-castle">🏰</div>`;
-  if (has('piano')) floor += `<div class="decor-emoji decor-piano">🎹</div>`;
+  if (has('painting')) wall += `<button class="decor-item decor-painting" data-decor="painting"><span>🖼️</span><span class="d-sub">🐟</span></button>`;
+  if (has('lamp')) wall += `<button class="decor-item decor-lamp" data-decor="lamp">🌙</button>`;
+  if (has('tank')) wall += `<button class="decor-item decor-tank" data-decor="tank"><span class="fish f1">🐠</span><span class="fish f2">🐟</span><span class="bubble b1"></span><span class="bubble b2"></span></button>`;
+  if (has('balloons')) wall += `<button class="decor-item decor-balloons" data-decor="balloons">🎈<span>🎈</span></button>`;
+  if (has('rug')) floor += `<button class="decor-item decor-rug" data-decor="rug"></button>`;
+  if (has('plant')) floor += `<button class="decor-item decor-plant" data-decor="plant">🪴</button>`;
+  if (has('castle')) floor += `<button class="decor-item decor-castle" data-decor="castle">🏰</button>`;
+  if (has('piano')) floor += `<button class="decor-item decor-piano" data-decor="piano">🎹</button>`;
   return { wall, floor, top };
+}
+
+function interactWithDecor(decorId, fromCat = null) {
+  const item = DECOR[decorId];
+  if (!item) return;
+  const el = `$(`.decor-${decorId}`)`;
+  if (el) UI.restartAnim(el, 'bump');
+  Sound.play(item.sound || 'tap');
+
+  if (decorId === 'piano') {
+    Sound.play('pianoKey');
+    UI.floatText(el || $('#view-cafe'), '🎵', 'big');
+  } else if (decorId === 'tank') {
+    UI.floatText(el || $('#view-cafe'), '🐠', 'big');
+  } else if (decorId === 'plant') {
+    UI.hearts(el || $('#view-cafe'), ['🌿', '🌸', '💖']);
+  } else if (decorId === 'castle') {
+    UI.floatText(el || $('#view-cafe'), '🏰', 'big');
+  } else if (decorId === 'rug') {
+    UI.floatText(el || $('#view-cafe'), '💤', 'big');
+  } else if (decorId === 'balloons') {
+    UI.floatText(el || $('#view-cafe'), '🎈', 'big');
+  }
+}
+
+/* =========================== Café & Roaming Cats =========================== */
+const DEFAULT_SPOTS = [
+  { x: 30, y: 14 }, { x: 50, y: 16 }, { x: 70, y: 14 }, { x: 20, y: 22 },
+  { x: 80, y: 24 }, { x: 40, y: 26 }, { x: 60, y: 28 }, { x: 15, y: 30 },
+];
+
+function initCatPositions() {
+  S.cats.forEach((c, i) => {
+    if (!catPos[c.id]) {
+      const sp = DEFAULT_SPOTS[i % DEFAULT_SPOTS.length];
+      catPos[c.id] = {
+        x: sp.x,
+        y: sp.y,
+        targetX: sp.x,
+        targetY: sp.y,
+        facing: Math.random() < 0.5 ? 1 : -1,
+        state: 'idle',
+        timer: Date.now() + 2000 + Math.random() * 3000,
+        interactId: null,
+      };
+    }
+  });
 }
 
 function cafeTip() {
@@ -316,10 +365,10 @@ function cafeTip() {
     return `🏠 A new kitty is waiting for you in <b>Adopt</b>!`;
   }
   const tips = [
-    '😺 Your cats are happy! Keep practicing to grow flowers in your Fact Garden.',
+    '🐾 Watch your cats roam around the café and interact with decor!',
     '🌸 Get a fact right 3 times in a row and it blooms into a flower!',
     '⚡ Try a Speed Round to earn lots of fish fast!',
-    '🪴 Make your café extra cozy with decorations from the Shop!',
+    '🪴 Make your café extra cozy with big interactive decor from the Shop!',
   ];
   return tips[Math.floor(Date.now() / 45000) % tips.length];
 }
@@ -327,25 +376,30 @@ function cafeTip() {
 function renderCafe() {
   const v = $('#view-cafe');
   const d = decorHTML();
-  const cats = S.cats.map((c, i) => {
-    const sp = SPOTS[i % SPOTS.length];
+  initCatPositions();
+
+  const catsHTML = S.cats.map((c) => {
+    const pos = catPos[c.id];
     const mood = catMood(c);
     const [need, val] = neediest(c);
     const bubble = val < 40
       ? `<span class="need-bubble">${NEED_INFO[need].emoji}</span>`
       : mood === 'ecstatic' ? `<span class="need-bubble love">💖</span>` : '';
-    return `<button class="cat-spot" data-cat="${c.id}" id="cat-${c.id}" style="left:${sp.x}%;bottom:${sp.y}%;--s:${sp.s};z-index:${100 - sp.y}" aria-label="Take care of ${esc(c.name)}">
+    const scaleX = pos.facing;
+    const isWalking = pos.state === 'walking';
+    return `<button class="cat-spot ${isWalking ? 'is-walking' : ''}" data-cat="${c.id}" id="cat-${c.id}" style="left:${pos.x}%;bottom:${pos.y}%;z-index:${Math.floor(100 - pos.y)};--facing:${scaleX}" aria-label="Take care of ${esc(c.name)}">
         ${bubble}
-        <div class="cat-bob" style="animation-delay:-${(i * 0.7) % 3}s">${catSVG(c.breed, mood)}</div>
+        <div class="cat-bob" style="transform: scaleX(${scaleX})">${catSVG(c.breed, mood)}</div>
         <span class="cat-name">${esc(c.name)}</span>
       </button>`;
   }).join('');
+
   const happy = S.cats.length ? Math.round(S.cats.reduce((s, c) => s + (c.hunger + c.fun + c.cozy) / 3, 0) / S.cats.length) : 0;
   const flowers = Problems.masteredCount(S);
 
   v.innerHTML = `
     <div class="cafe">
-      <div class="cafe-scene">
+      <div class="cafe-scene" id="cafe-scene">
         <div class="wall">
           <div class="window"><div class="sky"><span class="sun"></span><span class="cloud c1"></span><span class="cloud c2"></span></div></div>
           <div class="cafe-sign">☕ ${esc(S.playerName)}'s Cat Café</div>
@@ -354,7 +408,7 @@ function renderCafe() {
         </div>
         <div class="floor">${d.floor}</div>
         ${d.top}
-        <div class="cats-layer">${cats}</div>
+        <div class="cats-layer" id="cats-layer">${catsHTML}</div>
       </div>
       <aside class="cafe-panel">
         <div class="panel-card">
@@ -375,20 +429,95 @@ function renderCafe() {
       </aside>
     </div>`;
 
-  $$('.cat-spot', v).forEach(b => b.addEventListener('click', () => {
+  // Bind decor tap events
+  $$('.decor-item', v).forEach(item => {
+    item.addEventListener('click', e => {
+      e.stopPropagation();
+      interactWithDecor(item.dataset.decor);
+    });
+  });
+
+  // Bind cat click events
+  $$('.cat-spot', v).forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
     UI.restartAnim(b, 'jump');
     openCare(Number(b.dataset.cat));
   }));
+
   $('#cafe-play').addEventListener('click', () => { Sound.play('tap'); showView('practice'); });
+
+  startCatRoamingLoop();
 }
 
-function meterHTML(k, v) {
-  const info = NEED_INFO[k];
-  return `<div class="meter">
-      <span class="m-label">${info.emoji} ${info.label}</span>
-      <div class="m-track"><div class="m-fill ${v < 30 ? 'low' : ''}" style="width:${v}%;background:${info.color}"></div></div>
-      <span class="m-val">${Math.round(v)}</span>
-    </div>`;
+/* Roaming Cat Animation Engine */
+function startCatRoamingLoop() {
+  if (cafeAnimRaf) cancelAnimationFrame(cafeAnimRaf);
+
+  function step() {
+    if (currentView !== 'cafe') return;
+    const now = Date.now();
+    const activeDecorKeys = S.decor.filter(id => DECOR[id] && DECOR[id].spot);
+
+    S.cats.forEach(c => {
+      const pos = catPos[c.id];
+      if (!pos) return;
+
+      const catEl = $(`#cat-${c.id}`);
+      if (!catEl) return;
+
+      if (pos.state === 'walking') {
+        const dx = pos.targetX - pos.x;
+        const dy = pos.targetY - pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > 0.8) {
+          pos.x += (dx / dist) * 0.18;
+          pos.y += (dy / dist) * 0.12;
+          pos.facing = dx > 0 ? 1 : -1;
+
+          catEl.style.left = `${pos.x}%`;
+          catEl.style.bottom = `${pos.y}%`;
+          catEl.style.zIndex = Math.floor(100 - pos.y);
+          const bob = catEl.querySelector('.cat-bob');
+          if (bob) bob.style.transform = `scaleX(${pos.facing})`;
+          catEl.classList.add('is-walking');
+        } else {
+          // Reached target spot!
+          pos.x = pos.targetX;
+          pos.y = pos.targetY;
+          catEl.classList.remove('is-walking');
+
+          if (pos.interactId) {
+            pos.state = 'interacting';
+            pos.timer = now + 4000 + Math.random() * 3000;
+            interactWithDecor(pos.interactId, c);
+          } else {
+            pos.state = 'idle';
+            pos.timer = now + 3000 + Math.random() * 5000;
+          }
+        }
+      } else if (now > pos.timer) {
+        // Pick new destination!
+        const pickDecor = activeDecorKeys.length > 0 && Math.random() < 0.55;
+        if (pickDecor) {
+          const dKey = pick(activeDecorKeys);
+          const spot = DECOR[dKey].spot;
+          pos.targetX = Math.max(10, Math.min(88, spot.x + (Math.random() - 0.5) * 8));
+          pos.targetY = Math.max(8, Math.min(32, spot.y + (Math.random() - 0.5) * 4));
+          pos.interactId = dKey;
+        } else {
+          pos.targetX = 12 + Math.random() * 76;
+          pos.targetY = 8 + Math.random() * 24;
+          pos.interactId = null;
+        }
+        pos.state = 'walking';
+      }
+    });
+
+    cafeAnimRaf = requestAnimationFrame(step);
+  }
+
+  cafeAnimRaf = requestAnimationFrame(step);
 }
 
 function openCare(id) {
@@ -492,6 +621,15 @@ function openRename(cat) {
   });
 }
 
+function meterHTML(k, v) {
+  const info = NEED_INFO[k];
+  return `<div class="meter">
+      <span class="m-label">${info.emoji} ${info.label}</span>
+      <div class="m-track"><div class="m-fill ${v < 30 ? 'low' : ''}" style="width:${v}%;background:${info.color}"></div></div>
+      <span class="m-val">${Math.round(v)}</span>
+    </div>`;
+}
+
 /* =========================== Shop =========================== */
 function renderShop() {
   const v = $('#view-shop');
@@ -501,7 +639,7 @@ function renderShop() {
     <div class="page">
       <div class="page-head">
         <h2 class="page-title">🛍️ Kitty Shop</h2>
-        <p class="page-sub">Spend your fish on treats, toys and decorations!</p>
+        <p class="page-sub">Spend your fish on treats, toys and interactive café decor!</p>
       </div>
       <div class="seg shop-tabs" id="shop-tabs">
         ${SHOP_TABS.map(t => `<button data-tab="${t.id}" id="shop-tab-${t.id}" class="${t.id === shopTab ? 'on' : ''}">${t.emoji} ${t.label}</button>`).join('')}
@@ -543,7 +681,7 @@ function buy(id, btn) {
   UI.floatText(btn, `${it.emoji}`, 'big');
   if (isDecor) {
     S.decor.push(id);
-    UI.toast(`${it.emoji} <b>${it.name}</b> added to your café!`, 'gold');
+    UI.toast(`${it.emoji} <b>${it.name}</b> added to your café! Cats can walk up and interact with it!`, 'gold');
     UI.confetti(60);
   } else {
     S.inventory[id] = (S.inventory[id] || 0) + 1;
@@ -825,7 +963,6 @@ function boot() {
   $('#coin-pill').addEventListener('click', () => { Sound.play('tap'); showView('shop'); });
   $('#brand-cat').addEventListener('click', () => { Sound.play('meow'); UI.restartAnim($('#brand-cat'), 'wiggle'); });
 
-  // Hardware keyboard support (handy with an iPad keyboard case)
   document.addEventListener('keydown', e => {
     if (e.target.tagName === 'INPUT') return;
     let k = null;
@@ -837,9 +974,7 @@ function boot() {
     else if (currentView === 'practice' && !UI.anyModalOpen() && Practice.built) { Practice.key(k); e.preventDefault(); }
   });
 
-  // Prevent iOS pinch-zoom gestures from disturbing play
   document.addEventListener('gesturestart', e => e.preventDefault());
-
   setInterval(tickNeeds, 30000);
   document.addEventListener('visibilitychange', () => { if (!document.hidden) save(); });
 
