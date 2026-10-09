@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Purr-fect Products – Cat Café Multiplication Game</title>
+  <meta name="description" content="A cozy cat café game where kids practice multiplication and division facts up to 12 × 12 to earn fish coins and take care of adorable cats.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Cat Café">
+  <meta name="theme-color" content="#FFF0F4">
+  <link rel="apple-touch-icon" href="assets/icon.png">
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div id="app">
+    <!-- First-time setup: player name, pick & name a kitten -->
+    <section id="onboarding" class="onboarding hidden" aria-label="Get started"></section>
+
+    <!-- Main game -->
+    <div id="main" class="main hidden">
+      <header class="topbar">
+        <div class="brand">
+          <button class="brand-cat" id="brand-cat" aria-label="Meow!"></button>
+          <h1 id="cafe-title">Cat Café</h1>
+        </div>
+        <button class="coin-pill" id="coin-pill" aria-label="Fish coins">
+          <span class="coin-icon">🐟</span><span id="coin-count">0</span>
+        </button>
+        <button class="icon-btn" id="btn-settings" aria-label="Settings">⚙️</button>
+      </header>
+
+      <main class="views">
+        <section id="view-cafe" class="view" aria-label="Café"></section>
+        <section id="view-practice" class="view" aria-label="Practice"></section>
+        <section id="view-shop" class="view" aria-label="Shop"></section>
+        <section id="view-adopt" class="view" aria-label="Adopt"></section>
+        <section id="view-garden" class="view" aria-label="Fact Garden"></section>
+      </main>
+
+      <nav class="tabbar" role="tablist" aria-label="Game sections">
+        <button class="tab" data-view="cafe" id="tab-cafe" role="tab"><span class="ti">🏠</span>Café</button>
+        <button class="tab" data-view="practice" id="tab-practice" role="tab"><span class="ti">✖️</span>Practice</button>
+        <button class="tab" data-view="shop" id="tab-shop" role="tab"><span class="ti">🛍️</span>Shop</button>
+        <button class="tab" data-view="adopt" id="tab-adopt" role="tab"><span class="ti">🐾</span>Adopt</button>
+        <button class="tab" data-view="garden" id="tab-garden" role="tab"><span class="ti">🌸</span>Garden</button>
+      </nav>
+    </div>
+
+    <!-- Speed round overlay -->
+    <div id="speed" class="speed-overlay hidden" aria-label="Speed round"></div>
+
+    <div id="modal-root"></div>
+    <div id="toast-root" aria-live="polite"></div>
+    <canvas id="confetti" aria-hidden="true"></canvas>
+  </div>
+
+  <script src="js/audio.js"></script>
+  <script src="js/cats.js"></script>
+  <script src="js/problems.js"></script>
+  <script src="js/shop.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/practice.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>

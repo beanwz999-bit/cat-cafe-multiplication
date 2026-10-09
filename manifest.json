@@ -1,0 +1,12 @@
+{
+  "name": "Purr-fect Products – Cat Café",
+  "short_name": "Cat Café",
+  "description": "Practice multiplication and division by running a cozy cat café.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#FFF6EE",
+  "theme_color": "#FFF0F4",
+  "icons": [
+    { "src": "assets/icon.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
