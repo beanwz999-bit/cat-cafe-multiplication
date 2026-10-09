@@ -305,7 +305,7 @@ function decorHTML() {
 function interactWithDecor(decorId, fromCat = null) {
   const item = DECOR[decorId];
   if (!item) return;
-  const el = `$(`.decor-${decorId}`)`;
+  const el = $(`.decor-${decorId}`);
   if (el) UI.restartAnim(el, 'bump');
   Sound.play(item.sound || 'tap');
 
