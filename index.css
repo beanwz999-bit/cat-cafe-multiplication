@@ -1319,6 +1319,20 @@ button {
 .adopt-card.next { border: 3px solid var(--pink); box-shadow: var(--shadow-md); }
 .adopt-card.locked { opacity: 0.65; }
 
+.adopt-card.breed-unicorn {
+  background: linear-gradient(135deg, #FFF0FA 0%, #FFFFFF 50%, #F0F8FF 100%);
+  border: 3px solid #FFC6FF;
+  box-shadow: 0 8px 24px rgba(255, 184, 239, 0.4);
+}
+.adopt-card.breed-unicorn.next {
+  border: 3px solid #E0AAFF;
+  animation: unicornGlow 3s infinite alternate;
+}
+@keyframes unicornGlow {
+  0% { box-shadow: 0 0 15px rgba(255, 184, 239, 0.7); }
+  100% { box-shadow: 0 0 25px rgba(189, 178, 255, 0.9), 0 0 12px rgba(255, 214, 165, 0.6); }
+}
+
 .adopt-cat { width: 110px; height: 110px; position: relative; }
 .adopt-cat .lock { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; background: rgba(255,255,255,0.6); border-radius: 50%; }
 

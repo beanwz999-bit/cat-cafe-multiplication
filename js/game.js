@@ -714,7 +714,7 @@ function renderAdopt() {
           const fOk = flowers >= a.flowers;
           const cOk = S.coins >= a.price;
           const locked = !isNext;
-          return `<div class="adopt-card ${locked ? 'locked' : ''} ${isNext ? 'next' : ''}">
+          return `<div class="adopt-card breed-${a.breed} ${locked ? 'locked' : ''} ${isNext ? 'next' : ''}">
               <div class="adopt-cat">${catSVG(a.breed, 'happy')}${locked ? '<div class="lock">🔒</div>' : ''}</div>
               <div class="adopt-name">${br.label}</div>
               <div class="adopt-blurb">${br.blurb}</div>
@@ -761,7 +761,12 @@ function openAdoptName(a) {
         Sound.play('fanfare');
         setTimeout(() => Sound.play('meow'), 450);
         UI.confetti();
-        UI.toast(`💖 <b>${esc(name)}</b> moved into your café!`, 'gold', 3500);
+        if (a.breed === 'unicorn') {
+          setTimeout(() => UI.confetti(), 600);
+          UI.toast(`🦄✨ <b>${esc(name)}</b> the Magical Unicorn Kitty joined your café!`, 'gold', 5000);
+        } else {
+          UI.toast(`💖 <b>${esc(name)}</b> moved into your café!`, 'gold', 3500);
+        }
         Practice.refreshBuddy();
         showView('cafe');
       });

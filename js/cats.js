@@ -18,10 +18,12 @@ const BREEDS = {
              suggest: 'Sir Pickles', blurb: 'Always dressed for a fancy party.' },
   brown:   { label: 'Brown Tabby', body: '#B08A62', dark: '#76563A', chest: '#EADAC4', eye: '#9CCC65', pattern: 'tabby',
              suggest: 'Biscuit', blurb: 'Loves snacks more than anything in the world.' },
+  unicorn: { label: 'Unicorn Kitty 🦄', body: '#FFF2FD', dark: '#FFB8EF', chest: '#FFFFFF', eye: '#4CC9F0', pattern: 'unicorn',
+             suggest: 'Sparkles', blurb: '✨ A magical unicorn cat with a glowing horn, rainbow tail, and starry aura!' },
 };
 
 const STARTER_BREEDS = ['orange', 'gray', 'calico'];
-const ADOPT_ORDER = ['gray', 'black', 'white', 'siamese', 'tuxedo', 'brown', 'orange', 'calico'];
+const ADOPT_ORDER = ['gray', 'black', 'white', 'siamese', 'tuxedo', 'brown', 'orange', 'calico', 'unicorn'];
 const ADOPT_TIERS = [
   { price: 40, flowers: 3 },
   { price: 70, flowers: 8 },
@@ -30,6 +32,7 @@ const ADOPT_TIERS = [
   { price: 180, flowers: 34 },
   { price: 230, flowers: 46 },
   { price: 300, flowers: 60 },
+  { price: 500, flowers: 100 },
 ];
 
 const NEED_INFO = {
@@ -45,7 +48,7 @@ const MOOD_TEXT = {
   sad: 'needs some love 😿',
 };
 
-const NAME_IDEAS = ['Mochi', 'Luna', 'Whiskers', 'Pumpkin', 'Biscuit', 'Oreo', 'Ginger', 'Noodle', 'Pepper', 'Cinnamon', 'Muffin', 'Ziggy', 'Bean', 'Sprinkles'];
+const NAME_IDEAS = ['Mochi', 'Luna', 'Whiskers', 'Pumpkin', 'Biscuit', 'Oreo', 'Ginger', 'Noodle', 'Pepper', 'Cinnamon', 'Muffin', 'Ziggy', 'Bean', 'Sprinkles', 'Sparkles', 'Starlight', 'Celeste'];
 
 function adoptionList(state) {
   const starter = state.cats[0] ? state.cats[0].breed : null;
@@ -75,11 +78,11 @@ function catSVG(breedKey, mood = 'happy') {
   const pat = b.pattern;
   const brow = b.light ? '#E9E3F5' : '#5A4A42';
   const mouthC = pat === 'tuxedo' ? '#5A4A42' : pat === 'points' ? '#2E2018' : brow;
-  const whisk = b.light ? 'rgba(255,255,255,.75)' : 'rgba(90,74,66,.5)';
-  const earL = pat === 'points' || pat === 'calico' ? b.dark : b.body;
-  const earR = pat === 'points' ? b.dark : pat === 'calico' ? b.dark2 : b.body;
-  const tail = pat === 'points' ? b.dark : pat === 'calico' ? b.dark2 : b.body;
-  const paws = pat === 'points' ? b.dark : (pat === 'tuxedo' || pat === 'calico') ? '#FFFFFF' : b.body;
+  const whisk = pat === 'unicorn' ? '#FF9EE2' : (b.light ? 'rgba(255,255,255,.75)' : 'rgba(90,74,66,.5)');
+  const earL = pat === 'points' || pat === 'calico' ? b.dark : pat === 'unicorn' ? '#FFD6FA' : b.body;
+  const earR = pat === 'points' ? b.dark : pat === 'calico' ? b.dark2 : pat === 'unicorn' ? '#FFD6FA' : b.body;
+  const tail = pat === 'points' ? b.dark : pat === 'calico' ? b.dark2 : pat === 'unicorn' ? 'url(#unicorn-rainbow)' : b.body;
+  const paws = pat === 'points' ? b.dark : (pat === 'tuxedo' || pat === 'calico' || pat === 'unicorn') ? '#FFFFFF' : b.body;
   const delay = (Math.random() * 4).toFixed(2);
 
   let bodyPat = '';
@@ -98,6 +101,9 @@ function catSVG(breedKey, mood = 'happy') {
     headPat = `<ellipse cx="100" cy="105" rx="24" ry="18" fill="${b.dark}" opacity=".85"/>`;
   } else if (pat === 'tuxedo') {
     headPat = `<path d="M100 93 C88 93 79 102 79 111 C79 120 91 125 100 125 C109 125 121 120 121 111 C121 102 112 93 100 93Z" fill="#fff"/>`;
+  } else if (pat === 'unicorn') {
+    headPat = `<path d="M100 93 C88 93 79 102 79 111 C79 120 91 125 100 125 C109 125 121 120 121 111 C121 102 112 93 100 93Z" fill="#FFF0F8"/>
+      <circle cx="68" cy="70" r="2.5" fill="#FFC6FF"/><circle cx="132" cy="70" r="2.5" fill="#FFC6FF"/>`;
   }
 
   let eyes;
@@ -131,7 +137,38 @@ function catSVG(breedKey, mood = 'happy') {
   const whiskers = `<g stroke="${whisk}" stroke-width="2" stroke-linecap="round">
     <path d="M76 104 L47 99"/><path d="M76 109 L46 112"/><path d="M124 104 L153 99"/><path d="M124 109 L154 112"/></g>`;
 
+  const horn = pat === 'unicorn' ? `
+    <g class="unicorn-horn">
+      <path d="M100 2 L91 44 L109 44 Z" fill="url(#gold-horn)" stroke="#E5A93B" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M95 18 Q100 15 105 18" stroke="#FFF7DB" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M93 28 Q100 25 107 28" stroke="#FFF7DB" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M92 38 Q100 35 108 38" stroke="#FFF7DB" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <circle cx="100" cy="4" r="3" fill="#FFF" opacity=".9"/>
+    </g>` : '';
+
+  const stars = pat === 'unicorn' ? `
+    <text x="35" y="65" font-size="14" fill="#FFD166" opacity=".9">✨</text>
+    <text x="155" y="65" font-size="14" fill="#FFD166" opacity=".9">✨</text>` : '';
+
+  const defs = pat === 'unicorn' ? `
+    <defs>
+      <linearGradient id="unicorn-rainbow" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#FFADAD"/>
+        <stop offset="20%" stop-color="#FFD6A5"/>
+        <stop offset="40%" stop-color="#FDFFB6"/>
+        <stop offset="60%" stop-color="#CAFFBF"/>
+        <stop offset="80%" stop-color="#9BF6FF"/>
+        <stop offset="100%" stop-color="#BDB2FF"/>
+      </linearGradient>
+      <linearGradient id="gold-horn" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stop-color="#FFE066"/>
+        <stop offset="50%" stop-color="#F7B801"/>
+        <stop offset="100%" stop-color="#DB9A00"/>
+      </linearGradient>
+    </defs>` : '';
+
   return `<svg class="cat-svg mood-${mood}" viewBox="0 0 200 212" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    ${defs}
     <ellipse cx="100" cy="203" rx="58" ry="7" fill="rgba(75,58,87,.13)"/>
     <path class="cat-tail" style="animation-delay:-${delay}s" d="M136 174 Q182 170 178 128 Q176 108 188 98" stroke="${tail}" stroke-width="15" stroke-linecap="round" fill="none"/>
     <ellipse cx="100" cy="155" rx="48" ry="44" fill="${b.body}"/>
@@ -145,7 +182,8 @@ function catSVG(breedKey, mood = 'happy') {
       <path d="M66 60 L69 36 L87 50 Z" fill="#FFB3C1" stroke="#FFB3C1" stroke-width="3" stroke-linejoin="round"/>
       <path d="M134 60 L131 36 L113 50 Z" fill="#FFB3C1" stroke="#FFB3C1" stroke-width="3" stroke-linejoin="round"/>
       <ellipse cx="100" cy="90" rx="50" ry="44" fill="${b.body}"/>
-      ${headPat}${eyes}${blush}${nose}${mouth}${whiskers}
+      ${headPat}${eyes}${blush}${nose}${mouth}${whiskers}${horn}${stars}
     </g>
   </svg>`;
+}
 }
