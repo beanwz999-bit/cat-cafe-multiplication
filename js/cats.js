@@ -51,8 +51,10 @@ const MOOD_TEXT = {
 const NAME_IDEAS = ['Mochi', 'Luna', 'Whiskers', 'Pumpkin', 'Biscuit', 'Oreo', 'Ginger', 'Noodle', 'Pepper', 'Cinnamon', 'Muffin', 'Ziggy', 'Bean', 'Sprinkles', 'Sparkles', 'Starlight', 'Celeste'];
 
 function adoptionList(state) {
+  const isDino = state && state.theme === 'dino';
+  const order = isDino ? ADOPT_DINO_ORDER : ADOPT_ORDER;
   const starter = state.cats[0] ? state.cats[0].breed : null;
-  return ADOPT_ORDER.filter(b => b !== starter).slice(0, ADOPT_TIERS.length).map((breed, i) => ({
+  return order.filter(b => b !== starter).slice(0, ADOPT_TIERS.length).map((breed, i) => ({
     breed,
     ...ADOPT_TIERS[i],
     adopted: state.adopted.includes(breed),
@@ -72,8 +74,57 @@ function neediest(cat) {
   return [['hunger', cat.hunger], ['fun', cat.fun], ['cozy', cat.cozy]].sort((a, b) => a[1] - b[1])[0];
 }
 
+function renderCostumeSVG(costumeKey) {
+  if (!costumeKey) return '';
+  switch (costumeKey) {
+    case 'dino':
+      return `<g class="costume-dino">
+        <path d="M52 82 C52 42 70 30 100 30 C130 30 148 42 148 82 Z" fill="#70E000" opacity=".92"/>
+        <path d="M58 82 C58 48 74 38 100 38 C126 38 142 48 142 82 Z" fill="none" stroke="#38B000" stroke-width="3"/>
+        <polygon points="100,8 90,30 110,30" fill="#FFD166" stroke="#E5A93B" stroke-width="1.5"/>
+        <polygon points="76,16 70,36 88,34" fill="#FFD166" stroke="#E5A93B" stroke-width="1.5"/>
+        <polygon points="124,16 112,34 130,36" fill="#FFD166" stroke="#E5A93B" stroke-width="1.5"/>
+      </g>`;
+    case 'dog':
+      return `<g class="costume-dog">
+        <ellipse cx="46" cy="85" rx="14" ry="25" fill="#8D6E63" stroke="#5D4037" stroke-width="2.5"/>
+        <ellipse cx="154" cy="85" rx="14" ry="25" fill="#8D6E63" stroke="#5D4037" stroke-width="2.5"/>
+        <ellipse cx="100" cy="98" rx="12" ry="8" fill="#5D4037"/>
+        <ellipse cx="100" cy="96" rx="5" ry="3" fill="#2B1D16"/>
+      </g>`;
+    case 'cow':
+      return `<g class="costume-cow">
+        <polygon points="62,45 52,25 70,38" fill="#FFE066" stroke="#DB9A00" stroke-width="2"/>
+        <polygon points="138,45 148,25 130,38" fill="#FFE066" stroke="#DB9A00" stroke-width="2"/>
+        <ellipse cx="100" cy="103" rx="15" ry="10" fill="#FFB3C1" stroke="#FF8FA3" stroke-width="2"/>
+        <circle cx="94" cy="103" r="2" fill="#D85A75"/>
+        <circle cx="106" cy="103" r="2" fill="#D85A75"/>
+      </g>`;
+    case 'chicken':
+      return `<g class="costume-chicken">
+        <path d="M85 45 Q92 20 100 25 Q108 20 115 45 Z" fill="#E63946" stroke="#C1121F" stroke-width="2"/>
+        <polygon points="100,102 91,114 109,114" fill="#FFB703" stroke="#FB8500" stroke-width="2"/>
+      </g>`;
+    case 'crown':
+      return `<g class="costume-crown">
+        <polygon points="68,52 65,22 83,40 100,18 117,40 135,22 132,52" fill="#FFD166" stroke="#E5A93B" stroke-width="2"/>
+        <circle cx="65" cy="22" r="3.5" fill="#E63946"/>
+        <circle cx="100" cy="18" r="4" fill="#4CC9F0"/>
+        <circle cx="135" cy="22" r="3.5" fill="#E63946"/>
+      </g>`;
+    case 'wizard':
+      return `<g class="costume-wizard">
+        <ellipse cx="100" cy="55" rx="45" ry="10" fill="#3D348B"/>
+        <polygon points="100,0 68,52 132,52" fill="#5C4D7D"/>
+        <text x="94" y="32" font-size="12" fill="#FFD166">⭐</text>
+      </g>`;
+    default:
+      return '';
+  }
+}
+
 /** Draws a cute sitting cat as an inline SVG string. */
-function catSVG(breedKey, mood = 'happy') {
+function catSVG(breedKey, mood = 'happy', costumeKey = null) {
   const b = BREEDS[breedKey] || BREEDS.orange;
   const pat = b.pattern;
   const brow = b.light ? '#E9E3F5' : '#5A4A42';
@@ -167,6 +218,8 @@ function catSVG(breedKey, mood = 'happy') {
       </linearGradient>
     </defs>` : '';
 
+  const costumeHTML = costumeKey ? renderCostumeSVG(costumeKey) : '';
+
   return `<svg class="cat-svg mood-${mood}" viewBox="0 0 200 212" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
     ${defs}
     <ellipse cx="100" cy="203" rx="58" ry="7" fill="rgba(75,58,87,.13)"/>
@@ -182,7 +235,14 @@ function catSVG(breedKey, mood = 'happy') {
       <path d="M66 60 L69 36 L87 50 Z" fill="#FFB3C1" stroke="#FFB3C1" stroke-width="3" stroke-linejoin="round"/>
       <path d="M134 60 L131 36 L113 50 Z" fill="#FFB3C1" stroke="#FFB3C1" stroke-width="3" stroke-linejoin="round"/>
       <ellipse cx="100" cy="90" rx="50" ry="44" fill="${b.body}"/>
-      ${headPat}${eyes}${blush}${nose}${mouth}${whiskers}${horn}${stars}
+      ${headPat}${eyes}${blush}${nose}${mouth}${whiskers}${horn}${stars}${costumeHTML}
     </g>
   </svg>`;
+}
+
+/** Draws either a Cat or Dinosaur based on current game theme */
+function petSVG(pet, mood = 'happy') {
+  const costume = (typeof S !== 'undefined' && S.equippedCostumes) ? S.equippedCostumes[pet.id] : null;
+  const isDino = typeof S !== 'undefined' && S.theme === 'dino';
+  return isDino ? dinoSVG(pet.breed, mood, costume) : catSVG(pet.breed, mood, costume);
 }

@@ -11,6 +11,8 @@ const Problems = (() => {
 
   function key(op, a, b) {
     if (op === 'x') return a <= b ? `x${a}-${b}` : `x${b}-${a}`;
+    if (op === '+') return a <= b ? `+${a}-${b}` : `+${b}-${a}`;
+    if (op === '-') return `-${a}-${b}`;
     return `d${a}-${b}`;
   }
 
@@ -32,6 +34,13 @@ const Problems = (() => {
       const flip = Math.random() < 0.5;
       return { op, a, b, left: flip ? b : a, right: flip ? a : b, answer: a * b, sym: '×', key: key(op, a, b) };
     }
+    if (op === '+') {
+      const flip = Math.random() < 0.5;
+      return { op, a, b, left: flip ? b : a, right: flip ? a : b, answer: a + b, sym: '+', key: key(op, a, b) };
+    }
+    if (op === '-') {
+      return { op, a, b, left: a + b, right: a, answer: b, sym: '-', key: key(op, a, b) };
+    }
     return { op, a, b, left: a * b, right: a, answer: b, sym: '÷', key: key(op, a, b) };
   }
 
@@ -40,9 +49,20 @@ const Problems = (() => {
     if (recent.length > 4) recent.shift();
   }
 
+  function enabledOps(state) {
+    const ops = ['x'];
+    if (state && state.settings) {
+      if (state.settings.division) ops.push('d');
+      if (state.settings.addition) ops.push('+');
+      if (state.settings.subtraction) ops.push('-');
+    }
+    return ops;
+  }
+
   function next(state, mode) {
     review.forEach(r => r.due--);
-    const ri = review.findIndex(r => r.due <= 0 && (mode === 'mix' || r.op === mode));
+    const availableOps = enabledOps(state);
+    const ri = review.findIndex(r => r.due <= 0 && (mode === 'mix' ? availableOps.includes(r.op) : r.op === mode));
     if (ri >= 0) {
       const r = review.splice(ri, 1)[0];
       remember(r.key);
@@ -52,7 +72,7 @@ const Problems = (() => {
     const maxT = (state && state.settings && state.settings.upTo15) ? 15 : 12;
     const defaultTables = Array.from({ length: maxT }, (_, i) => i + 1);
     const tables = (state && state.settings && state.settings.tables && state.settings.tables.length) ? state.settings.tables : defaultTables;
-    const op = mode === 'mix' ? (Math.random() < 0.5 ? 'x' : 'd') : mode;
+    const op = mode === 'mix' ? availableOps[Math.floor(Math.random() * availableOps.length)] : mode;
     const cands = [];
     let total = 0;
     for (const a of tables) {
@@ -104,7 +124,7 @@ const Problems = (() => {
       if (!f.mastered && !(f.streak >= 3)) continue;
       const type = k[0];
       if (op && type !== op) continue;
-      if (type === 'x') {
+      if (type === 'x' || type === '+') {
         const parts = k.slice(1).split('-');
         if (parts[0] !== parts[1]) {
           count += 2;
@@ -122,5 +142,5 @@ const Problems = (() => {
     return `${p.left} ${p.sym} ${p.right} = ${p.answer}`;
   }
 
-  return { key, level, next, record, addReview, masteredCount, factText, make };
+  return { key, level, next, record, addReview, masteredCount, factText, make, enabledOps };
 })();

@@ -48,7 +48,11 @@ function pictureHTML(p, full) {
     dots += `<div class="dot-row ${r % 2 ? 'alt' : ''}" style="animation-delay:${r * 0.05}s">${'<i></i>'.repeat(cols)}</div>`;
   }
   let caption;
-  if (p.op === 'x') {
+  if (p.op === '+') {
+    caption = full ? `${p.left} + ${p.right} = <b>${p.answer}</b>` : `${p.left} paws and ${p.right} paws. How many in total?`;
+  } else if (p.op === '-') {
+    caption = full ? `${p.left} - ${p.right} = <b>${p.answer}</b>` : `Start with ${p.left} paws, take away ${p.right}. How many left?`;
+  } else if (p.op === 'x') {
     if (full) {
       const counts = Array.from({ length: rows }, (_, i) => (i + 1) * cols);
       caption = `${rows} rows of ${cols}: <span class="skip">${counts.join(', ')}</span>`;
@@ -78,14 +82,18 @@ const Practice = (() => {
 
   function build() {
     const v = $('#view-practice');
+    const enabled = Problems.enabledOps(S);
+    const hasMultiple = enabled.length > 1;
     const m = practiceMode();
     v.innerHTML = `
       <div class="practice">
         <div class="practice-toolbar">
-          ${S.settings.division ? `
+          ${hasMultiple ? `
           <div class="seg" id="mode-seg" role="tablist">
-            <button data-mode="x" id="mode-x" class="${m === 'x' ? 'on' : ''}">× Times</button>
-            <button data-mode="d" id="mode-d" class="${m === 'd' ? 'on' : ''}">÷ Divide</button>
+            ${enabled.includes('+') ? `<button data-mode="+" id="mode-+" class="${m === '+' ? 'on' : ''}">+ Add</button>` : ''}
+            ${enabled.includes('-') ? `<button data-mode="-" id="mode--" class="${m === '-' ? 'on' : ''}">- Sub</button>` : ''}
+            ${enabled.includes('x') ? `<button data-mode="x" id="mode-x" class="${m === 'x' ? 'on' : ''}">× Times</button>` : ''}
+            ${enabled.includes('d') ? `<button data-mode="d" id="mode-d" class="${m === 'd' ? 'on' : ''}">÷ Divide</button>` : ''}
             <button data-mode="mix" id="mode-mix" class="${m === 'mix' ? 'on' : ''}">🔀 Mix</button>
           </div>` : ''}
           <button class="chip" id="btn-tables">📚 ${tablesLabel()}</button>
@@ -151,14 +159,15 @@ const Practice = (() => {
     buddyCat = [...S.cats].sort((a, b) => (a.hunger + a.fun + a.cozy) - (b.hunger + b.fun + b.cozy))[0];
     const el = $('#buddy');
     if (!el) return;
-    el.innerHTML = catSVG(buddyCat.breed, catMood(buddyCat));
+    el.innerHTML = petSVG(buddyCat, catMood(buddyCat));
     if (phase === 'answer') say(defaultLine());
   }
 
   function defaultLine() {
     const c = buddyCat;
     const [need, val] = neediest(c);
-    if (val < 50) return `${esc(c.name)} ${NEED_INFO[need].want}! Earn 🪙 cat coins to help!`;
+    const coinLabel = S.theme === 'dino' ? 'dino coins' : 'cat coins';
+    if (val < 50) return `${esc(c.name)} ${NEED_INFO[need].want}! Earn 🪙 ${coinLabel} to help!`;
     return `${esc(c.name)} is cheering for you!`;
   }
 

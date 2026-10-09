@@ -27,10 +27,20 @@ const DECOR = {
   piano:    { name: 'Tiny Piano',     emoji: '🎹', price: 120, desc: 'Cats walk over and play musical notes!', spot: { x: 36, y: 14 }, action: 'play', sound: 'pianoKey' },
 };
 
+const COSTUMES = {
+  c_dino:    { id: 'dino',    name: 'Dino Suit',      emoji: '🦖', price: 35, desc: 'A green dinosaur hoodie with back spikes!' },
+  c_dog:     { id: 'dog',     name: 'Dog Hoodie',     emoji: '🐶', price: 35, desc: 'A fluffy puppy hoodie with floppy brown ears!' },
+  c_cow:     { id: 'cow',     name: 'Cow Onesie',     emoji: '🐮', price: 35, desc: 'A spotted cow onesie with tiny horns!' },
+  c_chicken: { id: 'chicken', name: 'Chicken Outfit', emoji: '🐔', price: 35, desc: 'A yellow feather suit with a red comb!' },
+  c_crown:   { id: 'crown',   name: 'Royal Crown',    emoji: '👑', price: 50, desc: 'A glittering gold crown for your fancy pet!' },
+  c_wizard:  { id: 'wizard',  name: 'Wizard Hat',     emoji: '🧙', price: 50, desc: 'A starry purple wizard hat full of magic!' },
+};
+
 const SHOP_TABS = [
   { id: 'food', label: 'Food', emoji: '🍗' },
   { id: 'toys', label: 'Toys', emoji: '🧶' },
   { id: 'cozy', label: 'Cozy', emoji: '🛏️' },
   { id: 'special', label: 'Treats', emoji: '🌿' },
+  { id: 'costumes', label: 'Costumes', emoji: '👗' },
   { id: 'decor', label: 'Decor', emoji: '🪴' },
 ];

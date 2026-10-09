@@ -1342,6 +1342,90 @@ button {
 .req { width: 100%; text-align: left; font-size: 0.85rem; font-weight: 600; display: flex; flex-direction: column; gap: 4px; }
 .req.ok { color: var(--mint-dark); }
 
+/* Room Selector */
+.room-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.room-tab {
+  background: var(--bg-card);
+  border: 2px solid transparent;
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-light);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.room-tab.on {
+  background: var(--pink-light);
+  color: var(--pink-dark);
+  border-color: var(--pink);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Wardrobe Modal & Costumes */
+.wardrobe-pets {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+.wardrobe-preview {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-subtle);
+  border-radius: 50%;
+  padding: 10px;
+}
+.costume-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.costume-card {
+  background: #FFF;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.costume-card.on {
+  border-color: var(--mint-dark);
+  background: var(--mint-light);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Dino Park Theme Overrides */
+body.theme-dino {
+  --pink: #90BE6D;
+  --pink-light: #F4F9F1;
+  --pink-dark: #2D6A4F;
+  --mint: #52B788;
+  --mint-light: #E8F5E9;
+  --mint-dark: #1B4332;
+  --lavender: #B5E48C;
+  --lavender-light: #F7FCF4;
+  --lavender-dark: #40916C;
+}
+
 /* View: Fact Garden */
 .garden-head {
   flex-direction: row;
